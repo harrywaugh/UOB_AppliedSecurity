@@ -7,6 +7,9 @@
 
 #include "helloworld.h"
 
+int octetstr_rd( uint8_t* r, int n_r );
+void octetstr_wr( const uint8_t* x, int n_x );
+
 int main( int argc, char* argv[] ) {
   // initialise the development board, using the default configuration
   if( !scale_init( &SCALE_CONF ) ) {
@@ -38,5 +41,24 @@ int main( int argc, char* argv[] ) {
     }
   }
 
+  return 0;
+}
+
+int octetstr_rd(uint8_t* r, int n_r)  {
+  n_r = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  for (int i = 0; i < n_r; ++i)  {
+    if (scale_uart_rd_avail())  {
+      r[i] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+    }
+  }
+  return 0;
+}
+
+void octetstr_wr( const uint8_t* x, int n_x )  {
+  for (int i = 0; i < n_x; ++i)  {
+    if (scale_uart_wr_avail())  {
+      scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i]);
+    }
+  }
   return 0;
 }
