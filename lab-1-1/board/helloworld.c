@@ -7,8 +7,8 @@
 
 #include "helloworld.h"
 
-int octetstr_rd( uint8_t* r, int n_r );
-void octetstr_wr( const uint8_t* x, int n_x );
+int octetstr_rd( char* r, int n_r );
+void octetstr_wr( const char* x, int n_x );
 
 int main( int argc, char* argv[] ) {
   // initialise the development board, using the default configuration
@@ -16,7 +16,7 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  char x[] = "hello world";
+  // char x[] = "hello world";
 
   while( true ) {
     // read  the GPI     pin, and hence switch : t   <- GPI
@@ -33,32 +33,54 @@ int main( int argc, char* argv[] ) {
     // delay for 500 ms = 1/2 s
     scale_delay_ms( 500 );
 
-    int n = strlen( x );
+
+
+    char read_buf[128];
+    int n_octs = octetstr_rd(read_buf, 128);
+    octetstr_wr(read_buf, n_octs);
+
+    // int n = strlen( x );
 
     // write x = "hello world" to the UART
-    for( int i = 0; i < n; i++ ) {
-      scale_uart_wr( SCALE_UART_MODE_BLOCKING, x[ i ] );
-    }
+    // for( int i = 0; i < n; i++ ) {
+    //   scale_uart_wr( SCALE_UART_MODE_BLOCKING, x[ i ] );
+    // }
   }
 
   return 0;
 }
 
-int octetstr_rd(uint8_t* r, int n_r)  {
-  n_r = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-  for (int i = 0; i < n_r; ++i)  {
-    if (scale_uart_rd_avail())  {
-      r[i] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-    }
+// int ascii_to_val()
+
+int octetstr_rd(char* r, int n_r)  {
+
+  char c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  char c2 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  int n1 = (c1 < 65)? c1-48:c1-55;
+  n1*=16;
+  int n2 = (c2 < 65)? c2-48:c2-55;
+  int n = n1+n2;
+  //Colon
+  scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  for (int i = 0; i < 2*n; i+=2)  {
+    r[i] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+    r[i+1] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   }
-  return 0;
+  return n;
 }
 
-void octetstr_wr( const uint8_t* x, int n_x )  {
-  for (int i = 0; i < n_x; ++i)  {
-    if (scale_uart_wr_avail())  {
-      scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i]);
-    }
+void octetstr_wr( const char* x, int n_x )  {
+  int n1 = n_x / 16;
+  int n2 = n_x % 16;
+  char c1 = (n1<10)?n1+48:n1+55;
+  char c2 = (n2<10)?n2+48:n2+55;
+
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, c1);
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, c2);
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, 58);
+
+  for (int i = 2*n_x-2; i>=0; i-=2)  {
+    scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i]);
+    scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i+1]);
   }
-  return 0;
 }
