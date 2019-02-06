@@ -16,6 +16,7 @@
 #include <openssl/aes.h> 
 
 typedef uint8_t aes_gf28_t;
+typedef uint16_t aes_poly_t;
 
 
 #endif

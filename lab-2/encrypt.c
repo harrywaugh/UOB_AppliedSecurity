@@ -7,7 +7,10 @@
 
 #include "encrypt.h"
 
-aes_gf28_t xtime(aes_gf28_t a);
+aes_gf28_t gf28_t_sbox( aes_gf28_t a );
+aes_gf28_t gf28_t_inv( aes_gf28_t a );
+aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b);
+aes_gf28_t gf28_t_mulx( aes_gf28_t a );
 
 int main( int argc, char* argv[] ) {
   uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
@@ -31,10 +34,53 @@ int main( int argc, char* argv[] ) {
   }
 }
 
+aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
+  a = gf28_t_inv(a);
+  a =   0x63     ^
+      ( a      ) ^
+      ( a << 1 ) ^
+      ( a << 2 ) ^
+      ( a << 3 ) ^
+      ( a << 4 ) ^
+      ( a >> 7 ) ^
+      ( a >> 6 ) ^
+      ( a >> 5 ) ^
+      ( a >> 4 );
+  return a;
 
-aes_gf28_t xtime(aes_gf28_t a) {
+}
+
+aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
+  //Aim is to find inverse of a, a^q = a, a^(q-1) = 1, a^(q-2) = a^(-1). q = 2^8(FF)
+  aes_gf28_t t0 = gf28_t_mul(a, a); //t0 = a^2
+  aes_gf28_t t1 = gf28_t_mul(t0, a); //t1 = a^3
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^4
+  t1 = gf28_t_mul(t1, t0);           //t1 = a^7
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^8
+  t0 = gf28_t_mul(t1, t0);           //t0 = a^15
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^30
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^60
+  t1 = gf28_t_mul(t1, t0);           //t1 = a^67
+  t0 = gf28_t_mul(t1, t0);           //t1 = a^127
+  return gf28_t_mul(t0, t0);         //t1 = a^254 = a^(2^8)
+} 
+
+aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b)  {
+  aes_poly_t t = 0; // Initialise polynomial result, needs a max of 16 bits
+
+  for ( uint8_t i = 7; i >= 0; --i )  {
+    t = gf28_t_mulx(t); //Multiply result by x
+
+    if ( (b >> i) & 1 ) // Right shift polyn b by i, if there is a 1. XOR= result with a
+      t ^= a;
+  }
+}
+
+aes_gf28_t gf28_t_mulx(aes_gf28_t a) {
   if( (a & 0x80) == 0x80) //If 8th bit is on, then it'll be shifted out of range, so reduce
     return (a << 1) ^ 0x1b; //0x1b is identity mod p(x), x^8 = x^4+x^3+x+1
   else 
     return (a << 1);
 }
+
+
