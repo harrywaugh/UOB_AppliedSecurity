@@ -8,11 +8,14 @@
 #ifndef __ENCRYPT_H
 #define __ENCRYPT_H
 
-#include  <stdio.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openssl/aes.h> 
+
+typedef uint8_t aes_gf28_t;
+
 
 #endif
