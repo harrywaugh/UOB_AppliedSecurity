@@ -56,8 +56,6 @@ void aes_enc_exp_step(aes_gf28_t* rk, gf_28k rc)  {
   rk[13] =      rk[9]               ^ rk[13];
   rk[14] =      rk[10]              ^ rk[14];
   rk[15] =      rk[11]              ^ rk[15];
- 
-
 }
 
 aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
