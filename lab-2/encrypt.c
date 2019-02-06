@@ -7,6 +7,7 @@
 
 #include "encrypt.h"
 
+void aes_enc_exp_step(aes_gf28_t* rk, gf_28_k rc);
 aes_gf28_t gf28_t_sbox( aes_gf28_t a );
 aes_gf28_t gf28_t_inv( aes_gf28_t a );
 aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b);
@@ -34,6 +35,31 @@ int main( int argc, char* argv[] ) {
   }
 }
 
+
+void aes_enc_exp_step(aes_gf28_t* rk, gf_28k rc)  {
+  rk[0]  = rc ^ gf_28k_sbox(rk[13]) ^ rk[0];
+  rk[1]  =      gf_28k_sbox(rk[14]) ^ rk[1];
+  rk[2]  =      gf_28k_sbox(rk[15]) ^ rk[2];
+  rk[3]  =      gf_28k_sbox(rk[12]) ^ rk[3];
+
+  rk[4]  =      rk[0]               ^ rk[4];
+  rk[5]  =      rk[1]               ^ rk[5];
+  rk[6]  =      rk[2]               ^ rk[6];
+  rk[7]  =      rk[3]               ^ rk[7];
+
+  rk[8]  =      rk[4]               ^ rk[8];
+  rk[9]  =      rk[5]               ^ rk[9];
+  rk[10] =      rk[6]               ^ rk[10];
+  rk[11] =      rk[7]               ^ rk[11];
+
+  rk[12] =      rk[8]               ^ rk[12];
+  rk[13] =      rk[9]               ^ rk[13];
+  rk[14] =      rk[10]              ^ rk[14];
+  rk[15] =      rk[11]              ^ rk[15];
+ 
+
+}
+
 aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
   a = gf28_t_inv(a);
   a =   0x63     ^
@@ -47,7 +73,6 @@ aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
       ( a >> 5 ) ^
       ( a >> 4 );
   return a;
-
 }
 
 aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
