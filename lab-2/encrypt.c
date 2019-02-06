@@ -30,3 +30,11 @@ int main( int argc, char* argv[] ) {
     printf( "AES.Enc( k, m ) != c\n" );
   }
 }
+
+
+aes_gf28_t xtime(aes_gf28_t a) {
+  if( (a & 0x80) == 0x80) //If 8th bit is on, then it'll be shifted out of range, so reduce
+    return (a << 1) ^ 0x1b; //0x1b is identity mod p(x), x^8 = x^4+x^3+x+1
+  else 
+    return (a << 1);
+}
