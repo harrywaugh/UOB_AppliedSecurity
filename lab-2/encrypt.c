@@ -7,11 +7,14 @@
 
 #include "encrypt.h"
 
-void aes_enc_exp_step(aes_gf28_t* rk, gf_28_k rc);
+void aes_sub_bytes(aes_gf28_t* s);
+void aes_key_addition( aes_gf28_t* s, aes_gf28_t* rk );
+void aes_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
 aes_gf28_t gf28_t_sbox( aes_gf28_t a );
 aes_gf28_t gf28_t_inv( aes_gf28_t a );
-aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b);
+aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
 aes_gf28_t gf28_t_mulx( aes_gf28_t a );
+
 
 int main( int argc, char* argv[] ) {
   uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
@@ -35,12 +38,23 @@ int main( int argc, char* argv[] ) {
   }
 }
 
+//Performs sbox element-wise on state matrix 
+void aes_sub_bytes(aes_gf28_t* s)  {
+  for ( uint8_t i = 0; i < 16; ++i)
+    s[i] = gf28_t_sbox(s[i]);
+}
+
+//Takes state matrix and a round key, and performs element-wise XOR
+void aes_key_addition(aes_gf28_t* s, aes_gf28_t* rk )  {
+  for ( uint8_t i = 0; i < 16; ++i)
+    s[i] ^= rk[i];
+}
 
 void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
-  rk[0]  = rc ^ gf_28k_sbox(rk[13]) ^ rk[0];
-  rk[1]  =      gf_28k_sbox(rk[14]) ^ rk[1];
-  rk[2]  =      gf_28k_sbox(rk[15]) ^ rk[2];
-  rk[3]  =      gf_28k_sbox(rk[12]) ^ rk[3];
+  rk[0]  = rc ^ gf28_t_sbox(rk[13]) ^ rk[0];
+  rk[1]  =      gf28_t_sbox(rk[14]) ^ rk[1];
+  rk[2]  =      gf28_t_sbox(rk[15]) ^ rk[2];
+  rk[3]  =      gf28_t_sbox(rk[12]) ^ rk[3];
 
   rk[4]  =      rk[0]               ^ rk[4];
   rk[5]  =      rk[1]               ^ rk[5];
