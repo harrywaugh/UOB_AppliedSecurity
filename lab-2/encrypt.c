@@ -6,10 +6,52 @@
  */
 
 #include "encrypt.h"
+ 
+#define AES_ENC_MIX_STEP(a,b,c,d) {      \
+  aes_gf28_t __a1 = s[ a ];                  \
+  aes_gf28_t __b1 = s[ b ];                  \
+  aes_gf28_t __c1 = s[ c ];                  \
+  aes_gf28_t __d1 = s[ d ];                  \
+                                             \
+  aes_gf28_t __a2 = gf28_t_mulx( __a1 );   \
+  aes_gf28_t __b2 = gf28_t_mulx( __b1 );   \
+  aes_gf28_t __c2 = gf28_t_mulx( __c1 );   \
+  aes_gf28_t __d2 = gf28_t_mulx( __d1 );   \
+                                             \
+  aes_gf28_t __a3 = __a1 ^ __a2;             \
+  aes_gf28_t __b3 = __b1 ^ __b2;             \
+  aes_gf28_t __c3 = __c1 ^ __c2;             \
+  aes_gf28_t __d3 = __d1 ^ __d2;             \
+                                             \
+  s[a] = __a2 ^ __b3 ^ __c1 ^ __d1;          \
+  s[b] = __a1 ^ __b2 ^ __c3 ^ __d1;          \
+  s[c] = __a1 ^ __b1 ^ __c2 ^ __d3;          \
+  s[d] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
+}
 
-void aes_sub_bytes(aes_gf28_t* s);
-void aes_key_addition( aes_gf28_t* s, aes_gf28_t* rk );
-void aes_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
+#define AES_ENC_SHIFT_STEP(a, b, c, d, e, f, g, h)  { \
+}
+
+#define AES_KEY_ADD_STEP(a, b, c, d)  { \
+  s[a] ^= rk[a];                       \
+  s[b] ^= rk[b];                       \
+  s[c] ^= rk[c];                       \
+  s[d] ^= rk[d];                       \
+}
+
+#define AES_ENC_SUB_STEP(a, b, c, d)  { \
+  s[a] ^= gf28_t_sbox(s[a]);                       \
+  s[b] ^= gf28_t_sbox(s[b]);                       \
+  s[c] ^= gf28_t_sbox(s[c]);                       \
+  s[d] ^= gf28_t_sbox(s[d]);                       \
+}
+
+
+void aes_enc_mix_columns(aes_gf28_t *s);
+void aes_enc_shift_rows(aes_gf28_t* s);
+void aes_enc_sub_bytes(aes_gf28_t* s);
+void aes_enc_key_add( aes_gf28_t* s, aes_gf28_t* rk );
+void aes_enc_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
 aes_gf28_t gf28_t_sbox( aes_gf28_t a );
 aes_gf28_t gf28_t_inv( aes_gf28_t a );
 aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
@@ -38,18 +80,43 @@ int main( int argc, char* argv[] ) {
   }
 }
 
+void aes_enc_mix_columns(aes_gf28_t *s)  {
+  AES_ENC_MIX_STEP(0, 1, 2, 3);
+  AES_ENC_MIX_STEP(4, 5, 6, 7);
+  AES_ENC_MIX_STEP(8, 9, 10, 11);
+  AES_ENC_MIX_STEP(12, 13, 14, 15);
+}
+
+void aes_enc_shift_rows(aes_gf28_t *s)  {
+  AES_ENC_SHIFT_STEP(1,  5,  9, 13,
+                     13,  1, 5,  9);
+  AES_ENC_SHIFT_STEP(2,  6, 10, 14,
+                     10, 14, 2,  6);
+  AES_ENC_SHIFT_STEP(3,  7, 11, 15,
+                     7, 11, 15,  3);
+} 
+
 //Performs sbox element-wise on state matrix 
-void aes_sub_bytes(aes_gf28_t* s)  {
-  for ( uint8_t i = 0; i < 16; ++i)
-    s[i] = gf28_t_sbox(s[i]);
+void aes_enc_sub_bytes(aes_gf28_t* s)  {
+  AES_ENC_SUB_STEP(0, 1, 2, 3);
+  AES_ENC_SUB_STEP(4, 5, 6, 7);
+  AES_ENC_SUB_STEP(8, 9, 10, 11);
+  AES_ENC_SUB_STEP(12, 13, 14, 15);
+  // for ( uint8_t i = 0; i < 16; ++i)
+  //   s[i] = gf28_t_sbox(s[i]);
 }
 
 //Takes state matrix and a round key, and performs element-wise XOR
-void aes_key_addition(aes_gf28_t* s, aes_gf28_t* rk )  {
-  for ( uint8_t i = 0; i < 16; ++i)
-    s[i] ^= rk[i];
+void aes_enc_key_add(aes_gf28_t* s, aes_gf28_t* rk )  {
+  AES_KEY_ADD_STEP(0, 1, 2, 3);
+  AES_KEY_ADD_STEP(4, 5, 6, 7);
+  AES_KEY_ADD_STEP(8, 9, 10, 11);
+  AES_KEY_ADD_STEP(12, 13, 14, 15);
+  // for(uint8_t = 0; i < 16; ++i ) 
+  //   s[i] ^= rk[i];
 }
 
+//Given ith round key and constant, it calculates the (i+1)th round key 
 void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
   rk[0]  = rc ^ gf28_t_sbox(rk[13]) ^ rk[0];
   rk[1]  =      gf28_t_sbox(rk[14]) ^ rk[1];
@@ -72,6 +139,7 @@ void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
   rk[15] =      rk[11]              ^ rk[15];
 }
 
+//Calculates sbox of a, this is the inverse of a, followed by affine transformation, f
 aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
   a = gf28_t_inv(a);
   a =   0x63     ^
@@ -87,6 +155,7 @@ aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
   return a;
 }
 
+//Calculates inverse of a
 aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
   //Aim is to find inverse of a, a^q = a, a^(q-1) = 1, a^(q-2) = a^(-1). q = 2^8(FF)
   aes_gf28_t t0 = gf28_t_mul(a, a); //t0 = a^2
@@ -102,6 +171,7 @@ aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
   return gf28_t_mul(t0, t0);         //t1 = a^254 = a^(2^8)
 } 
 
+//Multiplies ff a and ff b
 aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b)  {
   aes_poly_t t = 0; // Initialise polynomial result, needs a max of 16 bits
 
@@ -113,6 +183,7 @@ aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b)  {
   }
 }
 
+//Multiplies ff a by x
 aes_gf28_t gf28_t_mulx(aes_gf28_t a) {
   if( (a & 0x80) == 0x80) //If 8th bit is on, then it'll be shifted out of range, so reduce
     return (a << 1) ^ 0x1b; //0x1b is identity mod p(x), x^8 = x^4+x^3+x+1
