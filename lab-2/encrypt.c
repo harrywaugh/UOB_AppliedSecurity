@@ -46,12 +46,14 @@
   s[d] ^= gf28_t_sbox(s[d]);                       \
 }
 
+#define Nb 16
 
+void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k);
 void aes_enc_mix_columns(aes_gf28_t *s);
 void aes_enc_shift_rows(aes_gf28_t* s);
 void aes_enc_sub_bytes(aes_gf28_t* s);
 void aes_enc_key_add( aes_gf28_t* s, aes_gf28_t* rk );
-void aes_enc_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
+void aes_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
 aes_gf28_t gf28_t_sbox( aes_gf28_t a );
 aes_gf28_t gf28_t_inv( aes_gf28_t a );
 aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
@@ -70,7 +72,8 @@ int main( int argc, char* argv[] ) {
   AES_KEY rk;
 
   AES_set_encrypt_key( k, 128, &rk );
-  AES_encrypt( m, t, &rk );  
+  // AES_encrypt( m, t, &rk ); 
+  aes_enc(t, m, k);
 
   if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
     printf( "AES.Enc( k, m ) == c\n" );
@@ -78,6 +81,33 @@ int main( int argc, char* argv[] ) {
   else {
     printf( "AES.Enc( k, m ) != c\n" );
   }
+}
+
+void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k)  {
+  printf("Reached 1");
+  
+  uint8_t AEC_RC[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+  aes_gf28_t *rcp = AEC_RC;
+  aes_gf28_t rk[ 4 * Nb ], s[ 4 * Nb ];
+  aes_gf28_t* rkp = rk;
+  memcpy(s, m, 4*Nb*sizeof(uint8_t));
+  memcpy(rkp, k, 4*Nb*sizeof(uint8_t));
+
+  printf("Reached 1");
+  aes_enc_key_add(s, rkp);
+  for ( int r = 1; r < 9; ++r )  {
+    aes_enc_sub_bytes(s);
+    aes_enc_shift_rows(s);
+    aes_enc_mix_columns(s);
+    aes_enc_exp_step(rkp, *(++rcp));
+    aes_enc_key_add(s, rkp);
+  }
+  aes_enc_sub_bytes(s);
+  aes_enc_shift_rows(s);
+  aes_enc_exp_step(rkp, *(++rcp));
+  aes_enc_key_add(s, rkp);
+  memcpy(c, s, Nb*sizeof(uint8_t));
+  
 }
 
 void aes_enc_mix_columns(aes_gf28_t *s)  {
