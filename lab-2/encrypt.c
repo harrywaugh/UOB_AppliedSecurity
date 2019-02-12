@@ -36,7 +36,7 @@ int main( int argc, char* argv[] ) {
 }
 
 
-void aes_enc_exp_step(aes_gf28_t* rk, gf_28k rc)  {
+void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
   rk[0]  = rc ^ gf_28k_sbox(rk[13]) ^ rk[0];
   rk[1]  =      gf_28k_sbox(rk[14]) ^ rk[1];
   rk[2]  =      gf_28k_sbox(rk[15]) ^ rk[2];
