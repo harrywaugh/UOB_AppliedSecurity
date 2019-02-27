@@ -13,10 +13,10 @@
   aes_gf28_t __c1 = s[ c ];                  \
   aes_gf28_t __d1 = s[ d ];                  \
                                              \
-  aes_gf28_t __a2 = gf28_t_mulx( __a1 );   \
-  aes_gf28_t __b2 = gf28_t_mulx( __b1 );   \
-  aes_gf28_t __c2 = gf28_t_mulx( __c1 );   \
-  aes_gf28_t __d2 = gf28_t_mulx( __d1 );   \
+  aes_gf28_t __a2 = gf28_t_mulx( __a1 );     \
+  aes_gf28_t __b2 = gf28_t_mulx( __b1 );     \
+  aes_gf28_t __c2 = gf28_t_mulx( __c1 );     \
+  aes_gf28_t __d2 = gf28_t_mulx( __d1 );     \
                                              \
   aes_gf28_t __a3 = __a1 ^ __a2;             \
   aes_gf28_t __b3 = __b1 ^ __b2;             \
