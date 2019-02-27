@@ -18,7 +18,7 @@ int main( int argc, char* argv[] ) {
 
   // char x[] = "hello world";
 
-  while( true ) {
+  // while( true ) {
     // read  the GPI     pin, and hence switch : t   <- GPI
     bool t = scale_gpio_rd( SCALE_GPIO_PIN_GPI        );
     // write the GPO     pin, and hence LED    : GPO <- t
@@ -39,18 +39,18 @@ int main( int argc, char* argv[] ) {
     int n_octs = octetstr_rd(read_buf, 128);
     octetstr_wr(read_buf, n_octs);
 
+    
     // int n = strlen( x );
 
-    // write x = "hello world" to the UART
-    // for( int i = 0; i < n; i++ ) {
-    //   scale_uart_wr( SCALE_UART_MODE_BLOCKING, x[ i ] );
-    // }
-  }
+  //   // write x = "hello world" to the UART
+  //   for( int i = 0; i < n; i++ ) {
+  //     scale_uart_wr( SCALE_UART_MODE_BLOCKING, x[ i ] );
+  //   }
+  // }
 
   return 0;
 }
 
-// int ascii_to_val()
 
 int octetstr_rd(char* r, int n_r)  {
 

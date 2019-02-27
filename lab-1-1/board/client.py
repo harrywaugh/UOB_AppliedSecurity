@@ -66,14 +66,15 @@ def board_close( p ) :
 
 def board_rdln( p  ) :
   r = ''
-
   while( True ):
+
     t = p.read( 1 )
 
     if( t == '\x0D' ) :
       break
     else:
       r += t
+
 
   return r
 
@@ -85,6 +86,8 @@ def board_rdln( p  ) :
 
 def board_wrln( p, x ) :
   p.write( x + '\x0D' )
+  print(x + '\x0D' )
+  
 
 ## Client implementation, as invoked from main after checking command line
 ## arguments: the idea is to send an octet string x, and verify the octet
@@ -108,7 +111,8 @@ def client( argc, argv ) :
   print '      len( octetstr2str( x ) ) = %d' % (  len( t_1 ) )
   print 't_2 = rev( octetstr2str( x ) ) = %s' % ( repr( t_2 ) )
 
-  board_wrln( p, x ) ; r = board_rdln( p )
+  board_wrln( p, x ) ; 
+  r = board_rdln( p )
 
   t_3 =                                  r
   t_4 =                    octetstr2str( r )
