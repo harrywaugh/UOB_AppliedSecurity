@@ -9,6 +9,10 @@
 
 int octetstr_rd( char* r, int n_r );
 void octetstr_wr( const char* x, int n_x );
+void reverse_array( char *array, int n );
+
+int char_to_int(char c);
+char int_to_char(int i);
 
 int main( int argc, char* argv[] ) {
   // initialise the development board, using the default configuration
@@ -37,6 +41,7 @@ int main( int argc, char* argv[] ) {
 
     char read_buf[128];
     int n_octs = octetstr_rd(read_buf, 128);
+    reverse_array(read_buf, n_octs);
     octetstr_wr(read_buf, n_octs);
 
     
@@ -53,16 +58,19 @@ int main( int argc, char* argv[] ) {
 
 
 int octetstr_rd(char* r, int n_r)  {
-
+  // Reads first two characters, these are hex characters
   char c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   char c2 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-  int n1 = (c1 < 65)? c1-48:c1-55;
+  // Convert ASCII char to integer
+  int n1 = char_to_int(c1);
+  int n2 = char_to_int(c2);
+  // First char is an order larger than second, so multiply by 16
   n1*=16;
-  int n2 = (c2 < 65)? c2-48:c2-55;
   int n = n1+n2;
   //Colon
+  //Read n bytes
   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-  for (int i = 0; i < 2*n; i+=2)  {
+  for (int i = 0; i < 2*n; i+=2)  { //Iterate by 2 each time, as each 2 characters represents a byte
     r[i] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
     r[i+1] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   }
@@ -72,15 +80,34 @@ int octetstr_rd(char* r, int n_r)  {
 void octetstr_wr( const char* x, int n_x )  {
   int n1 = n_x / 16;
   int n2 = n_x % 16;
-  char c1 = (n1<10)?n1+48:n1+55;
-  char c2 = (n2<10)?n2+48:n2+55;
+  char c1 = int_to_char(n1);
+  char c2 = int_to_char(n2);
 
+  //Print n bytes and a colon to UART
   scale_uart_wr(SCALE_UART_MODE_BLOCKING, c1);
   scale_uart_wr(SCALE_UART_MODE_BLOCKING, c2);
   scale_uart_wr(SCALE_UART_MODE_BLOCKING, 58);
 
-  for (int i = 2*n_x-2; i>=0; i-=2)  {
+  //Print string
+  for (int i = 0; i < 2*n_x; i+=2)  {
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i]);
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i+1]);
   }
+}
+
+void reverse_array( char *array , int n)  {
+  char swp;
+  for (int i = 0; i  < n/2; i++)  {
+    swp = array[i];
+    array[i] = array[n-i];
+    array[n-i] = swp;
+  }
+}
+
+int char_to_int(char c)  {
+  return (c < 65) ? c-48:c-55;
+}
+
+char int_to_char(int i) {
+  return (i<10) ? i+48 : i+55
 }
