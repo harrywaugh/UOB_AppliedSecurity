@@ -7,12 +7,12 @@
 
 #include "helloworld.h"
 
-int octetstr_rd( char* r, int n_r );
-void octetstr_wr( const char* x, int n_x );
-void reverse_array( char *array, int n );
+uint8_t octetstr_rd( char* r, uint8_t n_r );
+void octetstr_wr( const char* x, uint8_t n_x );
+void reverse_array( char *array, uint8_t n );
 
-int char_to_int(char c);
-char int_to_char(int i);
+uint8_t hex_to_int(char c);
+char int_to_hex(uint8_t i);
 
 int main( int argc, char* argv[] ) {
   // initialise the development board, using the default configuration
@@ -39,10 +39,10 @@ int main( int argc, char* argv[] ) {
 
 
 
-    char read_buf[128];
-    int n_octs = octetstr_rd(read_buf, 128);
-    reverse_array(read_buf, n_octs);
-    octetstr_wr(read_buf, n_octs);
+    char read_buf[128] = {0};
+    uint8_t n = octetstr_rd(read_buf, 128);
+    // reverse_array(read_buf, n);
+    octetstr_wr(read_buf, n);
 
     
     // int n = strlen( x );
@@ -57,31 +57,30 @@ int main( int argc, char* argv[] ) {
 }
 
 
-int octetstr_rd(char* r, int n_r)  {
+uint8_t octetstr_rd(char* r, uint8_t n_r)  {
   // Reads first two characters, these are hex characters
   char c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   char c2 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   // Convert ASCII char to integer
-  int n1 = char_to_int(c1);
-  int n2 = char_to_int(c2);
+  uint8_t n1 = hex_to_int(c1);
+  uint8_t n2 = hex_to_int(c2);
   // First char is an order larger than second, so multiply by 16
   n1*=16;
-  int n = n1+n2;
+  uint8_t n = n1+n2;
   //Colon
-  //Read n bytes
+  //Read n bytes after colon
   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-  for (int i = 0; i < 2*n; i+=2)  { //Iterate by 2 each time, as each 2 characters represents a byte
+  for (uint8_t i = 0; i < 2*n; i++)  { //Iterate by 2 each time, as each 2 characters represents a byte
     r[i] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-    r[i+1] = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
   }
   return n;
 }
 
-void octetstr_wr( const char* x, int n_x )  {
-  int n1 = n_x / 16;
-  int n2 = n_x % 16;
-  char c1 = int_to_char(n1);
-  char c2 = int_to_char(n2);
+void octetstr_wr( const char* x, uint8_t n_x )  {
+  uint8_t n1 = n_x / 16;
+  uint8_t n2 = n_x % 16;
+  char c1 = int_to_hex(n1);
+  char c2 = int_to_hex(n2);
 
   //Print n bytes and a colon to UART
   scale_uart_wr(SCALE_UART_MODE_BLOCKING, c1);
@@ -89,25 +88,29 @@ void octetstr_wr( const char* x, int n_x )  {
   scale_uart_wr(SCALE_UART_MODE_BLOCKING, 58);
 
   //Print string
-  for (int i = 0; i < 2*n_x; i+=2)  {
+  for (uint8_t i = 0; i < 2*n_x; i++)  {
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i]);
-    scale_uart_wr(SCALE_UART_MODE_BLOCKING, x[i+1]);
   }
 }
 
-void reverse_array( char *array , int n)  {
-  char swp;
-  for (int i = 0; i  < n/2; i++)  {
-    swp = array[i];
-    array[i] = array[n-i];
-    array[n-i] = swp;
+void reverse_array( char *array , uint8_t n)  {
+  char swp0, swp1;
+  for (uint8_t i = 0; i < (2*n)/2; i+=2)  {
+    swp0 = array[i];
+    swp1 = array[i+1];
+
+    array[i]   = array[2*n-(i+2)];
+    array[i+1] = array[2*n-(i+1)];
+
+    array[2*n-(i+2)] = swp0;
+    array[2*n-(i+1)] = swp1;
   }
 }
 
-int char_to_int(char c)  {
+uint8_t hex_to_int(char c)  {
   return (c < 65) ? c-48:c-55;
 }
 
-char int_to_char(int i) {
-  return (i<10) ? i+48 : i+55
+char int_to_hex(uint8_t i) {
+  return (i<10) ? i+48 : i+55;
 }
