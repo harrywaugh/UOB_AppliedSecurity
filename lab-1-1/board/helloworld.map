@@ -1,7 +1,7 @@
 Archive member included to satisfy reference by file (symbol)
 
 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
-                              /tmp/ccRg1PKS.o (scale_delay_ms)
+                              /tmp/ccdQUkIf.o (scale_gpio_wr)
 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
                               /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o) (scale_conf)
 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
@@ -9,7 +9,9 @@ Archive member included to satisfy reference by file (symbol)
 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
                               (__irq_vector)
 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
-                              /tmp/ccRg1PKS.o (memset)
+                              /tmp/ccdQUkIf.o (memset)
+/opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+                              /tmp/ccdQUkIf.o (strlen)
 
 Allocating common symbols
 Common symbol       size              file
@@ -25,7 +27,7 @@ ram              0x0000000010000000 0x0000000000002000 xrw
 
 Linker script and memory map
 
-LOAD /tmp/ccRg1PKS.o
+LOAD /tmp/ccdQUkIf.o
 LOAD /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a
 START GROUP
 LOAD /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/thumb/v7-m/libgcc.a
@@ -33,7 +35,7 @@ LOAD /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/.
 END GROUP
                 0x0000000000000000                . = 0x0
 
-.text           0x0000000000000000      0x75c
+.text           0x0000000000000000      0x7f0
                 0x0000000000000000                __head_text = .
  *(.data.__irq_handler)
  .data.__irq_handler
@@ -45,75 +47,84 @@ END GROUP
                 0x0000000000000040                __irq_handler_nul
                 0x0000000000000042                __irq_handler_rst
  *(.text*)
- .text          0x0000000000000088       0xe6 /tmp/ccRg1PKS.o
-                0x0000000000000088                reverse_array
-                0x00000000000000bc                hex_to_int
-                0x00000000000000c8                octetstr_rd
-                0x000000000000011a                int_to_hex
-                0x0000000000000126                octetstr_wr
- *fill*         0x000000000000016e        0x2 
- .text.startup  0x0000000000000170       0x68 /tmp/ccRg1PKS.o
-                0x0000000000000170                main
- .text          0x00000000000001d8      0x4dc /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
-                0x00000000000001d8                scale_delay_us
-                0x00000000000001f4                scale_delay_ms
-                0x000000000000020c                scale_tsc
-                0x000000000000021c                scale_gpio_rd
-                0x0000000000000258                scale_gpio_wr
-                0x00000000000002a8                scale_uart_rd_avail
-                0x00000000000002b8                scale_uart_wr_avail
-                0x00000000000002c8                scale_init
-                0x000000000000057c                scale_uart_rd
-                0x0000000000000594                scale_uart_wr
-                0x00000000000005ac                scale_i2c_fsm
-                0x00000000000006a0                scale_i2c_rd
-                0x00000000000006aa                scale_i2c_wr
- .text          0x00000000000006b4        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
- .text          0x00000000000006b4        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
- .text.lpc13xx  0x00000000000006b4        0x8 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
-                0x00000000000006b4                lpc13xx_irq_enable
-                0x00000000000006b8                lpc13xx_irq_unable
- .text          0x00000000000006bc        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
- .text.__start  0x00000000000006bc        0xa /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
-                0x00000000000006bc                __start
- .text          0x00000000000006c6        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
- *fill*         0x00000000000006c6        0x2 
- .text.memset   0x00000000000006c8       0x94 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
-                0x00000000000006c8                memset
+ .text          0x0000000000000088      0x134 /tmp/ccdQUkIf.o
+                0x0000000000000088                my_print
+                0x00000000000000a8                reverse_array
+                0x00000000000000c6                hex_to_int
+                0x00000000000000d2                hex_to_int2
+                0x00000000000000e8                octetstr_rd
+                0x000000000000013a                int_to_hex
+                0x0000000000000146                int_to_hex2
+                0x000000000000015e                octetstr_wr
+ .text.startup  0x00000000000001bc       0x50 /tmp/ccdQUkIf.o
+                0x00000000000001bc                main
+ .text          0x000000000000020c      0x4dc /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
+                0x000000000000020c                scale_delay_us
+                0x0000000000000228                scale_delay_ms
+                0x0000000000000240                scale_tsc
+                0x0000000000000250                scale_gpio_rd
+                0x000000000000028c                scale_gpio_wr
+                0x00000000000002dc                scale_uart_rd_avail
+                0x00000000000002ec                scale_uart_wr_avail
+                0x00000000000002fc                scale_init
+                0x00000000000005b0                scale_uart_rd
+                0x00000000000005c8                scale_uart_wr
+                0x00000000000005e0                scale_i2c_fsm
+                0x00000000000006d4                scale_i2c_rd
+                0x00000000000006de                scale_i2c_wr
+ .text          0x00000000000006e8        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
+ .text          0x00000000000006e8        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
+ .text.lpc13xx  0x00000000000006e8        0x8 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
+                0x00000000000006e8                lpc13xx_irq_enable
+                0x00000000000006ec                lpc13xx_irq_unable
+ .text          0x00000000000006f0        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+ .text.__start  0x00000000000006f0        0xa /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+                0x00000000000006f0                __start
+ .text          0x00000000000006fa        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+ *fill*         0x00000000000006fa        0x2 
+ .text.memset   0x00000000000006fc       0x94 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+                0x00000000000006fc                memset
+ .text          0x0000000000000790        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+ .text.strlen   0x0000000000000790       0x5c /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+                0x0000000000000790                strlen
  *(.text.*)
  *(.rodata*)
+ .rodata.str1.1
+                0x00000000000007ec        0x2 /tmp/ccdQUkIf.o
  *(.rodata.*)
-                0x000000000000075c                . = ALIGN (0x4)
-                0x000000000000075c                __foot_text = .
+                0x00000000000007f0                . = ALIGN (0x4)
+ *fill*         0x00000000000007ee        0x2 
+                0x00000000000007f0                __foot_text = .
 
-.glue_7         0x000000000000075c        0x0
- .glue_7        0x000000000000075c        0x0 linker stubs
+.glue_7         0x00000000000007f0        0x0
+ .glue_7        0x00000000000007f0        0x0 linker stubs
 
-.glue_7t        0x000000000000075c        0x0
- .glue_7t       0x000000000000075c        0x0 linker stubs
+.glue_7t        0x00000000000007f0        0x0
+ .glue_7t       0x00000000000007f0        0x0 linker stubs
 
-.vfp11_veneer   0x000000000000075c        0x0
- .vfp11_veneer  0x000000000000075c        0x0 linker stubs
+.vfp11_veneer   0x00000000000007f0        0x0
+ .vfp11_veneer  0x00000000000007f0        0x0 linker stubs
 
-.v4_bx          0x000000000000075c        0x0
- .v4_bx         0x000000000000075c        0x0 linker stubs
+.v4_bx          0x00000000000007f0        0x0
+ .v4_bx         0x00000000000007f0        0x0 linker stubs
 
-.iplt           0x000000000000075c        0x0
- .iplt          0x000000000000075c        0x0 /tmp/ccRg1PKS.o
+.iplt           0x00000000000007f0        0x0
+ .iplt          0x00000000000007f0        0x0 /tmp/ccdQUkIf.o
 
-.rel.dyn        0x000000000000075c        0x0
- .rel.iplt      0x000000000000075c        0x0 /tmp/ccRg1PKS.o
+.rel.dyn        0x00000000000007f0        0x0
+ .rel.iplt      0x00000000000007f0        0x0 /tmp/ccdQUkIf.o
 
-.data           0x0000000010000000       0x2c load address 0x0000000000000760
+.data           0x0000000010000000       0x2c load address 0x00000000000007f0
                 0x0000000010000000                __head_data = .
  *(.data)
- .data          0x0000000010000000        0x0 /tmp/ccRg1PKS.o
+ .data          0x0000000010000000        0x0 /tmp/ccdQUkIf.o
  .data          0x0000000010000000        0x4 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
                 0x0000000010000000                SCALE_CONF
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
  .data          0x0000000010000004        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+ .data          0x0000000010000004        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
  *(.data.*)
  .data.lpc13xx  0x0000000010000004       0x28 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
                 0x0000000010000004                LPC13XX_SYSCON
@@ -129,31 +140,32 @@ END GROUP
                 0x000000001000002c                . = ALIGN (0x4)
                 0x000000001000002c                __foot_data = .
 
-.igot.plt       0x000000001000002c        0x0 load address 0x000000000000078c
- .igot.plt      0x000000001000002c        0x0 /tmp/ccRg1PKS.o
+.igot.plt       0x000000001000002c        0x0 load address 0x000000000000081c
+ .igot.plt      0x000000001000002c        0x0 /tmp/ccdQUkIf.o
 
-.bss            0x0000000010000030        0x4 load address 0x0000000000000790
+.bss            0x0000000010000030        0x4 load address 0x0000000000000820
                 0x0000000010000030                __head_bss = .
  *(.bss)
- .bss           0x0000000010000030        0x0 /tmp/ccRg1PKS.o
+ .bss           0x0000000010000030        0x0 /tmp/ccdQUkIf.o
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
  .bss           0x0000000010000030        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+ .bss           0x0000000010000030        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
  *(.bss.*)
                 0x0000000010000030                . = ALIGN (0x4)
                 0x0000000010000030                __foot_bss = .
  COMMON         0x0000000010000030        0x4 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
                 0x0000000010000030                scale_conf
                 [!provide]                        PROVIDE (__load_text, LOADADDR (.text))
-                0x0000000000000760                PROVIDE (__load_data, LOADADDR (.data))
-                0x0000000000000790                PROVIDE (__load_bss, LOADADDR (.bss))
+                0x00000000000007f0                PROVIDE (__load_data, LOADADDR (.data))
+                0x0000000000000820                PROVIDE (__load_bss, LOADADDR (.bss))
                 0x0000000010002000                PROVIDE (__tos, (ORIGIN (ram) + LENGTH (ram)))
 OUTPUT(helloworld.elf elf32-littlearm)
 
 .comment        0x0000000000000000       0x7e
- .comment       0x0000000000000000       0x7e /tmp/ccRg1PKS.o
+ .comment       0x0000000000000000       0x7e /tmp/ccdQUkIf.o
                                          0x7f (size before relaxing)
  .comment       0x000000000000007e       0x7f /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .comment       0x000000000000007e       0x7f /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
@@ -161,7 +173,7 @@ OUTPUT(helloworld.elf elf32-littlearm)
 .ARM.attributes
                 0x0000000000000000       0x31
  .ARM.attributes
-                0x0000000000000000       0x33 /tmp/ccRg1PKS.o
+                0x0000000000000000       0x33 /tmp/ccdQUkIf.o
  .ARM.attributes
                 0x0000000000000033       0x33 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .ARM.attributes
@@ -172,6 +184,9 @@ OUTPUT(helloworld.elf elf32-littlearm)
                 0x00000000000000ba       0x21 /home/fe16/hw16471/linux/AppliedSecurity/lab-1-1/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
  .ARM.attributes
                 0x00000000000000db       0x2d /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+ .ARM.attributes
+                0x0000000000000108       0x2d /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
 
-.debug_frame    0x0000000000000000       0x38
+.debug_frame    0x0000000000000000       0x58
  .debug_frame   0x0000000000000000       0x38 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-memset.o)
+ .debug_frame   0x0000000000000038       0x20 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
