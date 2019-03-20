@@ -8,13 +8,79 @@
 
 #define Nb 4
 
+typedef uint8_t aes_gf28_t;
+typedef uint16_t aes_poly_t;
 
-uint8_t octetstr_rd( uint8_t* r, uint8_t n_r )  {
-  return 0;
+void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k);
+void aes_enc_mix_columns(aes_gf28_t *s);
+void aes_enc_shift_rows(aes_gf28_t* s);
+void aes_enc_sub_bytes(aes_gf28_t* s);
+void aes_enc_key_add( aes_gf28_t* s, aes_gf28_t* rk );
+void aes_enc_exp_step( aes_gf28_t* rk, uint8_t rc );
+aes_gf28_t gf28_t_sbox( aes_gf28_t a );
+aes_gf28_t gf28_t_inv( aes_gf28_t a );
+aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
+aes_gf28_t gf28_t_mulx( aes_gf28_t a );
+
+
+uint8_t octetstr_rd( uint8_t* r, uint8_t n_r );
+void octetstr_wr( const uint8_t* x, uint8_t n_x );
+void reverse_array( uint8_t *array, uint8_t n );
+uint8_t hex_to_int(char c);
+uint8_t hex_to_int2(char c0, char c1);
+char int_to_hex(uint8_t i);
+void int_to_hex2(char* hex_chars, uint8_t i);
+void my_print(char *string);
+
+#define AES_ENC_MIX_STEP(a,b,c,d) {      \
+  aes_gf28_t __a1 = s[ a ];                  \
+  aes_gf28_t __b1 = s[ b ];                  \
+  aes_gf28_t __c1 = s[ c ];                  \
+  aes_gf28_t __d1 = s[ d ];                  \
+                                             \
+  aes_gf28_t __a2 = gf28_t_mulx( __a1 );     \
+  aes_gf28_t __b2 = gf28_t_mulx( __b1 );     \
+  aes_gf28_t __c2 = gf28_t_mulx( __c1 );     \
+  aes_gf28_t __d2 = gf28_t_mulx( __d1 );     \
+                                             \
+  aes_gf28_t __a3 = __a1 ^ __a2;             \
+  aes_gf28_t __b3 = __b1 ^ __b2;             \
+  aes_gf28_t __c3 = __c1 ^ __c2;             \
+  aes_gf28_t __d3 = __d1 ^ __d2;             \
+                                             \
+  s[a] = __a2 ^ __b3 ^ __c1 ^ __d1;          \
+  s[b] = __a1 ^ __b2 ^ __c3 ^ __d1;          \
+  s[c] = __a1 ^ __b1 ^ __c2 ^ __d3;          \
+  s[d] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
 }
-void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
-  return;
+
+#define AES_ENC_SHIFT_STEP(a, b, c, d, e, f, g, h)  { \
+  aes_gf28_t __a1 = s[ a ];                  \
+  aes_gf28_t __b1 = s[ b ];                  \
+  aes_gf28_t __c1 = s[ c ];                  \
+  aes_gf28_t __d1 = s[ d ];                  \
+                                             \
+  s[ e ] = __a1;                             \
+  s[ f ] = __b1;                             \
+  s[ g ] = __c1;                             \
+  s[ h ] = __d1;                             \
 }
+
+#define AES_KEY_ADD_STEP(a, b, c, d)  { \
+  s[a] = s[a] ^ rk[a];                       \
+  s[b] = s[b] ^ rk[b];                       \
+  s[c] = s[c] ^ rk[c];                       \
+  s[d] = s[d] ^ rk[d];                       \
+}
+
+#define AES_ENC_SUB_STEP(a, b, c, d)  { \
+  s[a] = gf28_t_sbox(s[a]);                       \
+  s[b] = gf28_t_sbox(s[b]);                       \
+  s[c] = gf28_t_sbox(s[c]);                       \
+  s[d] = gf28_t_sbox(s[d]);                       \
+}
+
+
 
 /** Initialise an AES-128 encryption, e.g., expand the cipher key k into round
   * keys, or perform randomised pre-computation in support of a countermeasure;
@@ -77,7 +143,8 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  uint8_t cmd[ 1 ], c[ SIZEOF_BLK ], m[ SIZEOF_BLK ], k[ SIZEOF_KEY ] = { 0x80, 0xCE, 0xFC, 0x6C, 0x78, 0x33, 0xDA, 0xB0, 0x8A, 0x31, 0xA5, 0x69, 0x04, 0x70, 0x77, 0x67 }, r[ SIZEOF_RND ];
+  uint8_t cmd[ 1 ], c[ SIZEOF_BLK ], m[ SIZEOF_BLK ], r[ SIZEOF_RND ];
+  uint8_t k[ SIZEOF_KEY ] = { 0x80, 0xCE, 0xFC, 0x6C, 0x78, 0x33, 0xDA, 0xB0, 0x8A, 0x31, 0xA5, 0x69, 0x04, 0x70, 0x77, 0x67 };
 
   while( true ) {
     if( 1 != octetstr_rd( cmd, 1 ) ) {
@@ -122,6 +189,92 @@ int main( int argc, char* argv[] ) {
   return 0;
 }
 
+
+void reverse_array( uint8_t *array , uint8_t n)  {
+  char swp;
+  for (uint8_t i = 0; i < n/2; i++)  {
+    swp = array[i];
+    array[i] = array[n-i-1];
+    array[n-i-1] = swp;
+  }
+}
+
+uint8_t hex_to_int2(char c0, char c1)  {
+  uint8_t n1 = hex_to_int(c0);
+  uint8_t n2 = hex_to_int(c1);
+  // First char is an order larger than second, so multiply by 16
+  n1*=16;
+  return n1+n2;
+}
+
+void int_to_hex2(char* hex_chars, uint8_t i)  {
+  uint8_t i0 = i / 16;
+  uint8_t i1 = i % 16;
+
+  hex_chars[0] = int_to_hex(i0);
+  hex_chars[1] = int_to_hex(i1);
+
+}
+
+uint8_t hex_to_int(char c)  {
+  return (c < 65) ? c-48:c-55;
+}
+
+char int_to_hex(uint8_t i) {
+  return (i<10) ? i+48 : i+55;
+}
+
+void my_print(char *string)  {
+  int len = strlen(string);
+  for(int i = 0; i < len; i++)  {
+    scale_uart_wr( SCALE_UART_MODE_BLOCKING, string[ i ] );
+  }
+}
+
+uint8_t octetstr_rd(uint8_t* r, uint8_t n_r)  {
+  // Reads first two characters, these are hex characters
+  char c0 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  char c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  // Convert ASCII char to integer
+  uint8_t n = hex_to_int2(c0, c1);
+  //Colon
+  scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+
+  //Read n bytes after colon
+  for (uint8_t i = 0; i < n; i++)  { //Iterate by 2 each time, as each 2 characters represents a byte
+    c0 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+    c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+
+    uint8_t byte = hex_to_int2(c0, c1);
+
+    r[i] = byte;
+  }
+
+  scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+  // scale_uart_rd(SCALE_UART_MODE_BLOCKING);
+
+  return n;
+}
+
+void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
+  char hex_chars[2];
+
+  int_to_hex2(hex_chars, n_x);
+
+  //Print n bytes and a colon to UART
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[0]);
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
+  scale_uart_wr(SCALE_UART_MODE_BLOCKING, 58);
+
+  //Print string
+  for (uint8_t i = 0; i < n_x; i++)  {
+    int_to_hex2(hex_chars, x[i]);
+    scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[0]);
+    scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
+  }
+  my_print( "\x0D" );
+  // my_print( "\x0D\x0A" );
+}
 
 
 
@@ -341,89 +494,5 @@ int main( int argc, char* argv[] ) {
 
 
 
-// uint8_t octetstr_rd(uint8_t* r, uint8_t n_r)  {
-//   // Reads first two characters, these are hex characters
-//   char c0 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-//   char c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-//   // Convert ASCII char to integer
-//   uint8_t n = hex_to_int2(c0, c1);
-//   //Colon
-//   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
 
-//   //Read n bytes after colon
-//   for (uint8_t i = 0; i < n; i++)  { //Iterate by 2 each time, as each 2 characters represents a byte
-//     c0 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-//     c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
 
-//     uint8_t byte = hex_to_int2(c0, c1);
-
-//     r[i] = byte;
-//   }
-
-//   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-//   // scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-
-//   return n;
-// }
-
-// void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
-//   char hex_chars[2];
-
-//   int_to_hex2(hex_chars, n_x);
-
-//   //Print n bytes and a colon to UART
-//   scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[0]);
-//   scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
-//   scale_uart_wr(SCALE_UART_MODE_BLOCKING, 58);
-
-//   //Print string
-//   for (uint8_t i = 0; i < n_x; i++)  {
-//     int_to_hex2(hex_chars, x[i]);
-//     scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[0]);
-//     scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
-//   }
-//   my_print( "\x0D" );
-//   // my_print( "\x0D\x0A" );
-
-// }
-
-// void reverse_array( uint8_t *array , uint8_t n)  {
-//   char swp;
-//   for (uint8_t i = 0; i < n/2; i++)  {
-//     swp = array[i];
-//     array[i] = array[n-i-1];
-//     array[n-i-1] = swp;
-//   }
-// }
-
-// uint8_t hex_to_int2(char c0, char c1)  {
-//   uint8_t n1 = hex_to_int(c0);
-//   uint8_t n2 = hex_to_int(c1);
-//   // First char is an order larger than second, so multiply by 16
-//   n1*=16;
-//   return n1+n2;
-// }
-
-// void int_to_hex2(char* hex_chars, uint8_t i)  {
-//   uint8_t i0 = i / 16;
-//   uint8_t i1 = i % 16;
-
-//   hex_chars[0] = int_to_hex(i0);
-//   hex_chars[1] = int_to_hex(i1);
-
-// }
-
-// uint8_t hex_to_int(char c)  {
-//   return (c < 65) ? c-48:c-55;
-// }
-
-// char int_to_hex(uint8_t i) {
-//   return (i<10) ? i+48 : i+55;
-// }
-
-// void my_print(char *string)  {
-//   int len = strlen(string);
-//   for(int i = 0; i < len; i++)  {
-//     scale_uart_wr( SCALE_UART_MODE_BLOCKING, string[ i ] );
-//   }
-// }

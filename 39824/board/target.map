@@ -1,13 +1,15 @@
 Archive member included to satisfy reference by file (symbol)
 
 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
-                              /tmp/ccj5H88B.o (scale_init)
+                              /tmp/ccMFHgYt.o (scale_gpio_wr)
 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
                               /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o) (scale_conf)
 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
                               /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o) (LPC13XX_SYSCON)
 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
                               (__irq_vector)
+/opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+                              /tmp/ccMFHgYt.o (strlen)
 
 Allocating common symbols
 Common symbol       size              file
@@ -23,7 +25,7 @@ ram              0x0000000010000000 0x0000000000002000 xrw
 
 Linker script and memory map
 
-LOAD /tmp/ccj5H88B.o
+LOAD /tmp/ccMFHgYt.o
 LOAD /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a
 START GROUP
 LOAD /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/thumb/v7-m/libgcc.a
@@ -31,7 +33,7 @@ LOAD /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/.
 END GROUP
                 0x0000000000000000                . = 0x0
 
-.text           0x0000000000000000      0x59c
+.text           0x0000000000000000      0x7a0
                 0x0000000000000000                __head_text = .
  *(.data.__irq_handler)
  .data.__irq_handler
@@ -43,70 +45,82 @@ END GROUP
                 0x0000000000000040                __irq_handler_nul
                 0x0000000000000042                __irq_handler_rst
  *(.text*)
- .text          0x0000000000000088        0xa /tmp/ccj5H88B.o
-                0x0000000000000088                octetstr_rd
-                0x000000000000008c                octetstr_wr
-                0x000000000000008e                aes_init
-                0x0000000000000090                aes
- *fill*         0x0000000000000092        0x2 
- .text.startup  0x0000000000000094       0x18 /tmp/ccj5H88B.o
-                0x0000000000000094                main
- .text          0x00000000000000ac      0x4dc /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
-                0x00000000000000ac                scale_delay_us
-                0x00000000000000c8                scale_delay_ms
-                0x00000000000000e0                scale_tsc
-                0x00000000000000f0                scale_gpio_rd
-                0x000000000000012c                scale_gpio_wr
-                0x000000000000017c                scale_uart_rd_avail
-                0x000000000000018c                scale_uart_wr_avail
-                0x000000000000019c                scale_init
-                0x0000000000000450                scale_uart_rd
-                0x0000000000000468                scale_uart_wr
-                0x0000000000000480                scale_i2c_fsm
-                0x0000000000000574                scale_i2c_rd
-                0x000000000000057e                scale_i2c_wr
- .text          0x0000000000000588        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
- .text          0x0000000000000588        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
- .text.lpc13xx  0x0000000000000588        0x8 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
-                0x0000000000000588                lpc13xx_irq_enable
-                0x000000000000058c                lpc13xx_irq_unable
- .text          0x0000000000000590        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
- .text.__start  0x0000000000000590        0xa /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
-                0x0000000000000590                __start
+ .text          0x0000000000000088      0x138 /tmp/ccMFHgYt.o
+                0x0000000000000088                aes_init
+                0x000000000000008a                aes
+                0x000000000000008c                reverse_array
+                0x00000000000000aa                hex_to_int
+                0x00000000000000b6                hex_to_int2
+                0x00000000000000cc                int_to_hex
+                0x00000000000000d8                int_to_hex2
+                0x00000000000000f0                my_print
+                0x0000000000000110                octetstr_rd
+                0x0000000000000162                octetstr_wr
+ .text.startup  0x00000000000001c0       0x90 /tmp/ccMFHgYt.o
+                0x00000000000001c0                main
+ .text          0x0000000000000250      0x4dc /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
+                0x0000000000000250                scale_delay_us
+                0x000000000000026c                scale_delay_ms
+                0x0000000000000284                scale_tsc
+                0x0000000000000294                scale_gpio_rd
+                0x00000000000002d0                scale_gpio_wr
+                0x0000000000000320                scale_uart_rd_avail
+                0x0000000000000330                scale_uart_wr_avail
+                0x0000000000000340                scale_init
+                0x00000000000005f4                scale_uart_rd
+                0x000000000000060c                scale_uart_wr
+                0x0000000000000624                scale_i2c_fsm
+                0x0000000000000718                scale_i2c_rd
+                0x0000000000000722                scale_i2c_wr
+ .text          0x000000000000072c        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
+ .text          0x000000000000072c        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
+ .text.lpc13xx  0x000000000000072c        0x8 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
+                0x000000000000072c                lpc13xx_irq_enable
+                0x0000000000000730                lpc13xx_irq_unable
+ .text          0x0000000000000734        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+ .text.__start  0x0000000000000734        0xa /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+                0x0000000000000734                __start
+ .text          0x000000000000073e        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+ *fill*         0x000000000000073e        0x2 
+ .text.strlen   0x0000000000000740       0x5c /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+                0x0000000000000740                strlen
  *(.text.*)
  *(.rodata*)
+ .rodata.str1.1
+                0x000000000000079c        0x2 /tmp/ccMFHgYt.o
  *(.rodata.*)
-                0x000000000000059c                . = ALIGN (0x4)
- *fill*         0x000000000000059a        0x2 
-                0x000000000000059c                __foot_text = .
+                0x00000000000007a0                . = ALIGN (0x4)
+ *fill*         0x000000000000079e        0x2 
+                0x00000000000007a0                __foot_text = .
 
-.glue_7         0x000000000000059c        0x0
- .glue_7        0x000000000000059c        0x0 linker stubs
+.glue_7         0x00000000000007a0        0x0
+ .glue_7        0x00000000000007a0        0x0 linker stubs
 
-.glue_7t        0x000000000000059c        0x0
- .glue_7t       0x000000000000059c        0x0 linker stubs
+.glue_7t        0x00000000000007a0        0x0
+ .glue_7t       0x00000000000007a0        0x0 linker stubs
 
-.vfp11_veneer   0x000000000000059c        0x0
- .vfp11_veneer  0x000000000000059c        0x0 linker stubs
+.vfp11_veneer   0x00000000000007a0        0x0
+ .vfp11_veneer  0x00000000000007a0        0x0 linker stubs
 
-.v4_bx          0x000000000000059c        0x0
- .v4_bx         0x000000000000059c        0x0 linker stubs
+.v4_bx          0x00000000000007a0        0x0
+ .v4_bx         0x00000000000007a0        0x0 linker stubs
 
-.iplt           0x000000000000059c        0x0
- .iplt          0x000000000000059c        0x0 /tmp/ccj5H88B.o
+.iplt           0x00000000000007a0        0x0
+ .iplt          0x00000000000007a0        0x0 /tmp/ccMFHgYt.o
 
-.rel.dyn        0x000000000000059c        0x0
- .rel.iplt      0x000000000000059c        0x0 /tmp/ccj5H88B.o
+.rel.dyn        0x00000000000007a0        0x0
+ .rel.iplt      0x00000000000007a0        0x0 /tmp/ccMFHgYt.o
 
-.data           0x0000000010000000       0x2c load address 0x00000000000005a0
+.data           0x0000000010000000       0x2c load address 0x00000000000007a0
                 0x0000000010000000                __head_data = .
  *(.data)
- .data          0x0000000010000000        0x0 /tmp/ccj5H88B.o
+ .data          0x0000000010000000        0x0 /tmp/ccMFHgYt.o
  .data          0x0000000010000000        0x4 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
                 0x0000000010000000                SCALE_CONF
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
  .data          0x0000000010000004        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+ .data          0x0000000010000004        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
  *(.data.*)
  .data.lpc13xx  0x0000000010000004       0x28 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
                 0x0000000010000004                LPC13XX_SYSCON
@@ -122,30 +136,31 @@ END GROUP
                 0x000000001000002c                . = ALIGN (0x4)
                 0x000000001000002c                __foot_data = .
 
-.igot.plt       0x000000001000002c        0x0 load address 0x00000000000005cc
- .igot.plt      0x000000001000002c        0x0 /tmp/ccj5H88B.o
+.igot.plt       0x000000001000002c        0x0 load address 0x00000000000007cc
+ .igot.plt      0x000000001000002c        0x0 /tmp/ccMFHgYt.o
 
-.bss            0x0000000010000030        0x4 load address 0x00000000000005d0
+.bss            0x0000000010000030        0x4 load address 0x00000000000007d0
                 0x0000000010000030                __head_bss = .
  *(.bss)
- .bss           0x0000000010000030        0x0 /tmp/ccj5H88B.o
+ .bss           0x0000000010000030        0x0 /tmp/ccMFHgYt.o
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
  .bss           0x0000000010000030        0x0 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+ .bss           0x0000000010000030        0x0 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
  *(.bss.*)
                 0x0000000010000030                . = ALIGN (0x4)
                 0x0000000010000030                __foot_bss = .
  COMMON         0x0000000010000030        0x4 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
                 0x0000000010000030                scale_conf
                 [!provide]                        PROVIDE (__load_text, LOADADDR (.text))
-                0x00000000000005a0                PROVIDE (__load_data, LOADADDR (.data))
-                0x00000000000005d0                PROVIDE (__load_bss, LOADADDR (.bss))
+                0x00000000000007a0                PROVIDE (__load_data, LOADADDR (.data))
+                0x00000000000007d0                PROVIDE (__load_bss, LOADADDR (.bss))
                 0x0000000010002000                PROVIDE (__tos, (ORIGIN (ram) + LENGTH (ram)))
 OUTPUT(target.elf elf32-littlearm)
 
 .comment        0x0000000000000000       0x7e
- .comment       0x0000000000000000       0x7e /tmp/ccj5H88B.o
+ .comment       0x0000000000000000       0x7e /tmp/ccMFHgYt.o
                                          0x7f (size before relaxing)
  .comment       0x000000000000007e       0x7f /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .comment       0x000000000000007e       0x7f /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(bsp.o)
@@ -153,7 +168,7 @@ OUTPUT(target.elf elf32-littlearm)
 .ARM.attributes
                 0x0000000000000000       0x31
  .ARM.attributes
-                0x0000000000000000       0x33 /tmp/ccj5H88B.o
+                0x0000000000000000       0x33 /tmp/ccMFHgYt.o
  .ARM.attributes
                 0x0000000000000033       0x33 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(scale.o)
  .ARM.attributes
@@ -162,3 +177,8 @@ OUTPUT(target.elf elf32-littlearm)
                 0x0000000000000099       0x21 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(lpc13xx.o)
  .ARM.attributes
                 0x00000000000000ba       0x21 /home/fe16/hw16471/linux/AppliedSecurity/39824/scale-hw/target/lpc1313fbd48/build/lib/libscale.a(crt0.o)
+ .ARM.attributes
+                0x00000000000000db       0x2d /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
+
+.debug_frame    0x0000000000000000       0x20
+ .debug_frame   0x0000000000000000       0x20 /opt/gcc-arm-none-eabi/7-2017-q4-major/bin/../lib/gcc/arm-none-eabi/7.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/libc.a(lib_a-strlen-stub.o)
