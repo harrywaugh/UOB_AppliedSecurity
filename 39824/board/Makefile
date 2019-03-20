@@ -16,9 +16,9 @@ endif
 
 PROJECT = target
 
-  build-${PROJECT}      :
+build-${PROJECT}      :
 	@make --no-builtin-rules -f ${TARGET}/build/lib/scale.mk BSP="${TARGET}/build" USB="/dev/scale-board" PROJECT="${PROJECT}" all
-  clean-${PROJECT}      :
+clean-${PROJECT}      :
 	@make --no-builtin-rules -f ${TARGET}/build/lib/scale.mk BSP="${TARGET}/build" USB="/dev/scale-board" PROJECT="${PROJECT}" clean
 
 program-${PROJECT}      :
