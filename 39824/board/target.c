@@ -105,7 +105,37 @@ void aes_init(                               const uint8_t* k, const uint8_t* r 
   */
 
 void aes     ( uint8_t* c, const uint8_t* m, const uint8_t* k, const uint8_t* r ) {
-  return;
+  aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
+  
+  aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
+  aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
+
+
+  memcpy(s, m, 16);
+  memcpy(rkp, k, 16);
+
+
+  aes_enc_key_add(s, rkp);
+
+
+  for ( int r = 1; r <= 9; ++r )  {
+    aes_enc_sub_bytes(s);
+    aes_enc_shift_rows(s);
+    aes_enc_mix_columns(s);
+    aes_enc_exp_step(rkp, *(++rcp));
+    
+    aes_enc_key_add(s, rkp);
+
+
+  }
+
+  aes_enc_sub_bytes(s);
+  aes_enc_shift_rows(s);
+  aes_enc_exp_step(rkp, *(++rcp));
+
+  aes_enc_key_add(s, rkp);
+  memcpy(c, s, 16);
 }
 
 /** Initialise the SCALE development board, then loop indefinitely, reading a
@@ -144,7 +174,7 @@ int main( int argc, char* argv[] ) {
   }
 
   uint8_t cmd[ 1 ], c[ SIZEOF_BLK ], m[ SIZEOF_BLK ], r[ SIZEOF_RND ];
-  uint8_t k[ SIZEOF_KEY ] = { 0x80, 0xCE, 0xFC, 0x6C, 0x78, 0x33, 0xDA, 0xB0, 0x8A, 0x31, 0xA5, 0x69, 0x04, 0x70, 0x77, 0x67 };
+  uint8_t k[ SIZEOF_KEY ] = { 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13};
 
   while( true ) {
     my_print("Inspect (01:00) or ENCRYPT (01:01): ");
@@ -175,7 +205,7 @@ int main( int argc, char* argv[] ) {
           break;
         }
 
-        aes_init(       k, r );
+        aes_init( k, r );
 
         scale_gpio_wr( SCALE_GPIO_PIN_TRG,  true );
         aes     ( c, m, k, r );
@@ -250,17 +280,15 @@ uint8_t octetstr_rd(uint8_t* r, uint8_t n_r)  {
   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
 
   //Read n bytes after colon
-  for (uint8_t i = 0; i < n; i++)  { //Iterate by 2 each time, as each 2 characters represents a byte
+  for (uint8_t i = 0; i < n && i < n_r; i++)  { //Iterate by 2 each time, as each 2 characters represents a byte
     c0 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
     c1 = scale_uart_rd(SCALE_UART_MODE_BLOCKING);
 
     uint8_t byte = hex_to_int2(c0, c1);
-
     r[i] = byte;
   }
 
   scale_uart_rd(SCALE_UART_MODE_BLOCKING);
-  // scale_uart_rd(SCALE_UART_MODE_BLOCKING);
 
   return n;
 }
@@ -322,184 +350,156 @@ void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
 // //   }
 // // }
 
-// void print_arr(aes_gf28_t *arr)  {
-//   for ( int i = 0; i < 16; i++)
-//     printf("%02X ", arr[i]);
-//   printf("\n");
-// }
 
-// void transpose(uint8_t *arr1, uint8_t *arr2)  {
-//   arr1[0] = arr2[0];
-//   arr1[1] = arr2[4];
-//   arr1[2] = arr2[8];
-//   arr1[3] = arr2[12];
-
-//   arr1[4] = arr2[1];
-//   arr1[5] = arr2[5];
-//   arr1[6] = arr2[9];
-//   arr1[7] = arr2[13];
-
-//   arr1[8] = arr2[2];
-//   arr1[9] = arr2[6];
-//   arr1[10] = arr2[10];
-//   arr1[11] = arr2[14];
-
-//   arr1[12] = arr2[3];
-//   arr1[13] = arr2[7];
-//   arr1[14] = arr2[11];
-//   arr1[15] = arr2[15];
-
-// }
-
-// void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k)  {
-//   aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
-//   aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
+void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k)  {
+  aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
   
-//   aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
-//   aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
+  aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
+  aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
 
 
-//   memcpy(s, m, 16);
-//   memcpy(rkp, k, 16);
+  memcpy(s, m, 16);
+  memcpy(rkp, k, 16);
 
 
-//   aes_enc_key_add(s, rkp);
+  aes_enc_key_add(s, rkp);
 
 
-//   for ( int r = 1; r <= 9; ++r )  {
-//     aes_enc_sub_bytes(s);
-//     aes_enc_shift_rows(s);
-//     aes_enc_mix_columns(s);
-//     aes_enc_exp_step(rkp, *(++rcp));
+  for ( int r = 1; r <= 9; ++r )  {
+    aes_enc_sub_bytes(s);
+    aes_enc_shift_rows(s);
+    aes_enc_mix_columns(s);
+    aes_enc_exp_step(rkp, *(++rcp));
     
-//     aes_enc_key_add(s, rkp);
+    aes_enc_key_add(s, rkp);
 
 
-//   }
+  }
 
-//   aes_enc_sub_bytes(s);
-//   aes_enc_shift_rows(s);
-//   aes_enc_exp_step(rkp, *(++rcp));
+  aes_enc_sub_bytes(s);
+  aes_enc_shift_rows(s);
+  aes_enc_exp_step(rkp, *(++rcp));
 
-//   aes_enc_key_add(s, rkp);
-//   memcpy(c, s, 16);
-// }
+  aes_enc_key_add(s, rkp);
+  memcpy(c, s, 16);
+}
 
 
 
-// void aes_enc_mix_columns(aes_gf28_t *s)  {
-//   for ( int i = 0; i < 4; i++ , s+=4 ) 
-//     AES_ENC_MIX_STEP(0, 1, 2, 3);
-// }
+void aes_enc_mix_columns(aes_gf28_t *s)  {
+  for ( int i = 0; i < 4; i++ , s+=4 ) 
+    AES_ENC_MIX_STEP(0, 1, 2, 3);
+}
 
-// void aes_enc_shift_rows(aes_gf28_t *s)  {
-//   AES_ENC_SHIFT_STEP(1,  5,  9, 13,
-//                      13,  1, 5,  9);
-//   AES_ENC_SHIFT_STEP(2,  6, 10, 14,
-//                      10, 14, 2,  6);
-//   AES_ENC_SHIFT_STEP(3, 7, 11, 15,
-//                      7, 11, 15, 3);
-// } 
+void aes_enc_shift_rows(aes_gf28_t *s)  {
+  AES_ENC_SHIFT_STEP(1,  5,  9, 13,
+                     13,  1, 5,  9);
+  AES_ENC_SHIFT_STEP(2,  6, 10, 14,
+                     10, 14, 2,  6);
+  AES_ENC_SHIFT_STEP(3, 7, 11, 15,
+                     7, 11, 15, 3);
+} 
 
-// //Performs sbox element-wise on state matrix 
-// void aes_enc_sub_bytes(aes_gf28_t* s)  {
-//   AES_ENC_SUB_STEP(0, 1, 2, 3);
-//   AES_ENC_SUB_STEP(4, 5, 6, 7);
-//   AES_ENC_SUB_STEP(8, 9, 10, 11);
-//   AES_ENC_SUB_STEP(12, 13, 14, 15);
-//   // for ( uint8_t i = 0; i < 16; ++i)
-//   //   s[i] = gf28_t_sbox(s[i]);
-// }
+//Performs sbox element-wise on state matrix 
+void aes_enc_sub_bytes(aes_gf28_t* s)  {
+  AES_ENC_SUB_STEP(0, 1, 2, 3);
+  AES_ENC_SUB_STEP(4, 5, 6, 7);
+  AES_ENC_SUB_STEP(8, 9, 10, 11);
+  AES_ENC_SUB_STEP(12, 13, 14, 15);
+  // for ( uint8_t i = 0; i < 16; ++i)
+  //   s[i] = gf28_t_sbox(s[i]);
+}
 
-// //Takes state matrix and a round key, and performs element-wise XOR
-// void aes_enc_key_add(aes_gf28_t* s, aes_gf28_t* rk )  {
-//   AES_KEY_ADD_STEP(0, 1, 2, 3);
-//   AES_KEY_ADD_STEP(4, 5, 6, 7);
-//   AES_KEY_ADD_STEP(8, 9, 10, 11);
-//   AES_KEY_ADD_STEP(12, 13, 14, 15);
-//   // for(uint8_t = 0; i < 16; ++i ) 
-//   //   s[i] ^= rk[i];
-// }
+//Takes state matrix and a round key, and performs element-wise XOR
+void aes_enc_key_add(aes_gf28_t* s, aes_gf28_t* rk )  {
+  AES_KEY_ADD_STEP(0, 1, 2, 3);
+  AES_KEY_ADD_STEP(4, 5, 6, 7);
+  AES_KEY_ADD_STEP(8, 9, 10, 11);
+  AES_KEY_ADD_STEP(12, 13, 14, 15);
+  // for(uint8_t = 0; i < 16; ++i ) 
+  //   s[i] ^= rk[i];
+}
 
-// //Given ith round key and constant, it calculates the (i+1)th round key 
-// void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
-//   rk[0]  = rc ^ gf28_t_sbox(rk[13]) ^ rk[0];
-//   rk[1]  =      gf28_t_sbox(rk[14]) ^ rk[1];
-//   rk[2]  =      gf28_t_sbox(rk[15]) ^ rk[2];
-//   rk[3]  =      gf28_t_sbox(rk[12]) ^ rk[3];
+//Given ith round key and constant, it calculates the (i+1)th round key 
+void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
+  rk[0]  = rc ^ gf28_t_sbox(rk[13]) ^ rk[0];
+  rk[1]  =      gf28_t_sbox(rk[14]) ^ rk[1];
+  rk[2]  =      gf28_t_sbox(rk[15]) ^ rk[2];
+  rk[3]  =      gf28_t_sbox(rk[12]) ^ rk[3];
 
-//   rk[4]  =      rk[0]               ^ rk[4];
-//   rk[5]  =      rk[1]               ^ rk[5];
-//   rk[6]  =      rk[2]               ^ rk[6];
-//   rk[7]  =      rk[3]               ^ rk[7];
+  rk[4]  =      rk[0]               ^ rk[4];
+  rk[5]  =      rk[1]               ^ rk[5];
+  rk[6]  =      rk[2]               ^ rk[6];
+  rk[7]  =      rk[3]               ^ rk[7];
 
-//   rk[8]  =      rk[4]               ^ rk[8];
-//   rk[9]  =      rk[5]               ^ rk[9];
-//   rk[10] =      rk[6]               ^ rk[10];
-//   rk[11] =      rk[7]               ^ rk[11];
+  rk[8]  =      rk[4]               ^ rk[8];
+  rk[9]  =      rk[5]               ^ rk[9];
+  rk[10] =      rk[6]               ^ rk[10];
+  rk[11] =      rk[7]               ^ rk[11];
 
-//   rk[12] =      rk[8]               ^ rk[12];
-//   rk[13] =      rk[9]               ^ rk[13];
-//   rk[14] =      rk[10]              ^ rk[14];
-//   rk[15] =      rk[11]              ^ rk[15];
-// }
+  rk[12] =      rk[8]               ^ rk[12];
+  rk[13] =      rk[9]               ^ rk[13];
+  rk[14] =      rk[10]              ^ rk[14];
+  rk[15] =      rk[11]              ^ rk[15];
+}
 
-// //Calculates sbox of a, this is the inverse of a, followed by affine transformation, f
-// aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
-//   a = gf28_t_inv(a);
+//Calculates sbox of a, this is the inverse of a, followed by affine transformation, f
+aes_gf28_t gf28_t_sbox( aes_gf28_t a ) {
+  a = gf28_t_inv(a);
 
-//   a =   0x63     ^
-//       ( a      ) ^
-//       ( a << 1 ) ^
-//       ( a << 2 ) ^
-//       ( a << 3 ) ^
-//       ( a << 4 ) ^
-//       ( a >> 7 ) ^
-//       ( a >> 6 ) ^
-//       ( a >> 5 ) ^
-//       ( a >> 4 );
-//   return a;
-// }
+  a =   0x63     ^
+      ( a      ) ^
+      ( a << 1 ) ^
+      ( a << 2 ) ^
+      ( a << 3 ) ^
+      ( a << 4 ) ^
+      ( a >> 7 ) ^
+      ( a >> 6 ) ^
+      ( a >> 5 ) ^
+      ( a >> 4 );
+  return a;
+}
 
-// //Calculates inverse of a
-// aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
+//Calculates inverse of a
+aes_gf28_t gf28_t_inv( aes_gf28_t a )  {
 
-//   //Aim is to find inverse of a, a^q = a, a^(q-1) = 1, a^(q-2) = a^(-1). q = 2^8(FF)
-//   aes_gf28_t t0 = gf28_t_mul(a, a); //t0 = a^2
+  //Aim is to find inverse of a, a^q = a, a^(q-1) = 1, a^(q-2) = a^(-1). q = 2^8(FF)
+  aes_gf28_t t0 = gf28_t_mul(a, a); //t0 = a^2
 
-//   aes_gf28_t t1 = gf28_t_mul(t0, a); //t1 = a^3
+  aes_gf28_t t1 = gf28_t_mul(t0, a); //t1 = a^3
 
-//   t0 = gf28_t_mul(t0, t0);           //t0 = a^4
-//   t1 = gf28_t_mul(t1, t0);           //t1 = a^7
-//   t0 = gf28_t_mul(t0, t0);           //t0 = a^8
-//   t0 = gf28_t_mul(t1, t0);           //t0 = a^15
-//   t0 = gf28_t_mul(t0, t0);           //t0 = a^30
-//   t0 = gf28_t_mul(t0, t0);           //t0 = a^60
-//   t1 = gf28_t_mul(t1, t0);           //t1 = a^67
-//   t0 = gf28_t_mul(t1, t0);           //t1 = a^127
-//   return gf28_t_mul(t0, t0);         //t1 = a^254 = a^(2^8)
-// } 
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^4
+  t1 = gf28_t_mul(t1, t0);           //t1 = a^7
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^8
+  t0 = gf28_t_mul(t1, t0);           //t0 = a^15
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^30
+  t0 = gf28_t_mul(t0, t0);           //t0 = a^60
+  t1 = gf28_t_mul(t1, t0);           //t1 = a^67
+  t0 = gf28_t_mul(t1, t0);           //t1 = a^127
+  return gf28_t_mul(t0, t0);         //t1 = a^254 = a^(2^8)
+} 
 
-// //Multiplies ff a and ff b
-// aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b)  {
-//   aes_gf28_t t = 0; // Initialise polynomial result, needs a max of 16 bits
+//Multiplies ff a and ff b
+aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b)  {
+  aes_gf28_t t = 0; // Initialise polynomial result, needs a max of 16 bits
 
-//   for ( uint8_t i = 7; i < 8; --i )  {
-//     t = gf28_t_mulx(t); //Multiply result by x
+  for ( uint8_t i = 7; i < 8; --i )  {
+    t = gf28_t_mulx(t); //Multiply result by x
 
-//     if ( (b >> i) & 1 ) // Right shift polyn b by i, if there is a 1. XOR= result with a
-//       t ^= a;
-//   }
-//   return t;
-// }
+    if ( (b >> i) & 1 ) // Right shift polyn b by i, if there is a 1. XOR= result with a
+      t ^= a;
+  }
+  return t;
+}
 
-// //Multiplies ff a by x
-// aes_gf28_t gf28_t_mulx(aes_gf28_t a) {
-//   if( (a & 0x80) == 0x80) //If 8th bit is on, then it'll be shifted out of range, so reduce
-//     return (a << 1) ^ 0x1b; //0x1b is identity mod p(x), x^8 = x^4+x^3+x+1
-//   else 
-//     return (a << 1);
-// }
+//Multiplies ff a by x
+aes_gf28_t gf28_t_mulx(aes_gf28_t a) {
+  if( (a & 0x80) == 0x80) //If 8th bit is on, then it'll be shifted out of range, so reduce
+    return (a << 1) ^ 0x1b; //0x1b is identity mod p(x), x^8 = x^4+x^3+x+1
+  else 
+    return (a << 1);
+}
 
 
 
