@@ -147,22 +147,27 @@ int main( int argc, char* argv[] ) {
   uint8_t k[ SIZEOF_KEY ] = { 0x80, 0xCE, 0xFC, 0x6C, 0x78, 0x33, 0xDA, 0xB0, 0x8A, 0x31, 0xA5, 0x69, 0x04, 0x70, 0x77, 0x67 };
 
   while( true ) {
+    my_print("Inspect (01:00) or ENCRYPT (01:01): ");
+
     if( 1 != octetstr_rd( cmd, 1 ) ) {
       break;
     }
-
     switch( cmd[ 0 ] ) {
       case COMMAND_INSPECT : {
+        my_print("Inspect: ");
+
         uint8_t t = SIZEOF_BLK; 
-                    octetstr_wr( &t, 1 ); 
-                t = SIZEOF_KEY; 
-                    octetstr_wr( &t, 1 ); 
-                t = SIZEOF_RND; 
-                    octetstr_wr( &t, 1 ); 
+        octetstr_wr( &t, 1 ); 
+        t = SIZEOF_KEY; 
+        octetstr_wr( &t, 1 ); 
+        t = SIZEOF_RND; 
+        octetstr_wr( &t, 1 ); 
 
         break;
       }
       case COMMAND_ENCRYPT : {
+        my_print("Encrypt: ");
+
         if( SIZEOF_BLK != octetstr_rd( m, SIZEOF_BLK ) ) {
           break;
         }
@@ -229,6 +234,10 @@ void my_print(char *string)  {
   for(int i = 0; i < len; i++)  {
     scale_uart_wr( SCALE_UART_MODE_BLOCKING, string[ i ] );
   }
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0D');
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0A');
+
+
 }
 
 uint8_t octetstr_rd(uint8_t* r, uint8_t n_r)  {
@@ -272,51 +281,51 @@ void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[0]);
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
   }
-  my_print( "\x0D" );
-  // my_print( "\x0D\x0A" );
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0D');
+  scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0A');
 }
 
 
 
 
 
-// int main( int argc, char* argv[] ) {
-//   uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-//                       0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-//   uint8_t m[ 16 ] = { 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
-//                       0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
+// // int main( int argc, char* argv[] ) {
+// //   uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+// //                       0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+// //   uint8_t m[ 16 ] = { 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
+// //                       0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
 
-//   uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
-//                       0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
+// //   uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
+// //                       0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
 
-//   // uint8_t k1[ 16 ] = { 0x54, 0x68, 0x61, 0x74, 0x73, 0x20, 0x6D, 0x79, 
-//   //                     0x20, 0x4B, 0x75, 0x6E, 0x67, 0x20, 0x46, 0x75 };
-//   // uint8_t m1[ 16 ] = { 0x54, 0x77, 0x6F, 0x20, 0x4F, 0x6E, 0x65, 0x20,
-//   //                     0x4E, 0x69, 0x6E, 0x65, 0x20, 0x54, 0x77, 0x6F };
+// //   // uint8_t k1[ 16 ] = { 0x54, 0x68, 0x61, 0x74, 0x73, 0x20, 0x6D, 0x79, 
+// //   //                     0x20, 0x4B, 0x75, 0x6E, 0x67, 0x20, 0x46, 0x75 };
+// //   // uint8_t m1[ 16 ] = { 0x54, 0x77, 0x6F, 0x20, 0x4F, 0x6E, 0x65, 0x20,
+// //   //                     0x4E, 0x69, 0x6E, 0x65, 0x20, 0x54, 0x77, 0x6F };
 
-//   // uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
-//   //                     0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
+// //   // uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
+// //   //                     0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
 
-//   uint8_t t[ 16 ];
+// //   uint8_t t[ 16 ];
 
-//   AES_KEY rk;
+// //   AES_KEY rk;
 
-//   AES_set_encrypt_key( k, 128, &rk );
-//   AES_encrypt( m, t, &rk );
-//   // aes_enc(t, m, k);
+// //   AES_set_encrypt_key( k, 128, &rk );
+// //   AES_encrypt( m, t, &rk );
+// //   // aes_enc(t, m, k);
 
-//   if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
-//     printf( "AES.Enc( k, m ) == c\n" );
-//   }
-//   else {
-//     printf( "AES.Enc( k, m ) != c\n" );
-//   }
-// }
+// //   if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
+// //     printf( "AES.Enc( k, m ) == c\n" );
+// //   }
+// //   else {
+// //     printf( "AES.Enc( k, m ) != c\n" );
+// //   }
+// // }
 
 // void print_arr(aes_gf28_t *arr)  {
 //   for ( int i = 0; i < 16; i++)
 //     printf("%02X ", arr[i]);
-//   printf("\n\n");
+//   printf("\n");
 // }
 
 // void transpose(uint8_t *arr1, uint8_t *arr2)  {
