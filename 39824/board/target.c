@@ -139,7 +139,7 @@ void aes     ( uint8_t* c, const uint8_t* m, const uint8_t* k, const uint8_t* r 
   aes_enc_key_add(s, rkp);
 
 
-  for ( int r = 1; r <= 9; ++r )  {
+  for ( int r = 1; r < 10; ++r )  {
     aes_enc_sub_bytes(s);
     aes_enc_shift_rows(s);
     aes_enc_mix_columns(s);

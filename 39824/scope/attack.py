@@ -112,13 +112,12 @@ def attack( argc, argv ):
   print("Loaded data")
   print("Message Shape: ", M.shape)
   print("Traces Shape: ", T.shape)
-  # step = s/11
+  step = int(s/11)
   # print("Step length: ", step)
 
-  # for i in range (1,10):
-  #   plt.plot([x for x in range(step)], T[0, i*step+400:(i+1)*step+400])
-  #   plt.savefig('acu_trace0.'+str(i)+'.pdf')
-  #   # plt.cla()
+  plt.plot([x for x in range(2*step)], T[0, 1*step:3*step])
+  plt.savefig('atrace0.pdf')
+  # plt.cla()
 
   first_bytes = M[:, 0] ## Get first byte of each message
   H = numpy.zeros(shape=(t, 256), dtype=np.uint8) ## Declare matrix of key estimate results for each message
