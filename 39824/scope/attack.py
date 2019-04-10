@@ -5,6 +5,7 @@
 # LICENSE.txt within the associated archive or repository).
 
 import numpy, struct, sys
+import numpy as np
 import matplotlib.pyplot as plt
 
 ## Load  a trace data set from an on-disk file.
@@ -119,12 +120,14 @@ def attack( argc, argv ):
   #   plt.savefig('acu_trace0.'+str(i)+'.pdf')
   #   # plt.cla()
 
-  first_bytes = M[:, 0]
-  hypo_results = numpy.zeros(shape=(256, t), dtype=np.uint8)
-  for i in len(first_bytes):
+  first_bytes = M[:, 0] ## Get first byte of each message
+  H = numpy.zeros(shape=(t, 256), dtype=np.uint8) ## Declare matrix of key estimate results for each message
+  for i in range(t):
     for k in np.arange(256, dtype=np.uint8):
-      hypo_results[k, m](sbox[k ^ first_bytes[i]])
+      H[i, k]=(sbox[k ^ first_bytes[i]]) & 1
 
+  for x in H[0, :]:
+    print(x)
 
   pass
 
