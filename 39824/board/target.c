@@ -371,39 +371,39 @@ void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
 // // }
 
 
-void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k)  {
-  aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
-  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
+// void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k)  {
+//   aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+//   aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
   
-  aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
-  aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
+//   aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
+//   aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
 
 
-  memcpy(s, m, 16);
-  memcpy(rkp, k, 16);
+//   memcpy(s, m, 16);
+//   memcpy(rkp, k, 16);
 
 
-  aes_enc_key_add(s, rkp);
+//   aes_enc_key_add(s, rkp);
 
 
-  for ( int r = 1; r <= 9; ++r )  {
-    aes_enc_sub_bytes(s);
-    aes_enc_shift_rows(s);
-    aes_enc_mix_columns(s);
-    aes_enc_exp_step(rkp, *(++rcp));
+//   for ( int r = 1; r <= 9; ++r )  {
+//     aes_enc_sub_bytes(s);
+//     aes_enc_shift_rows(s);
+//     aes_enc_mix_columns(s);
+//     aes_enc_exp_step(rkp, *(++rcp));
     
-    aes_enc_key_add(s, rkp);
+//     aes_enc_key_add(s, rkp);
 
 
-  }
+//   }
 
-  aes_enc_sub_bytes(s);
-  aes_enc_shift_rows(s);
-  aes_enc_exp_step(rkp, *(++rcp));
+//   aes_enc_sub_bytes(s);
+//   aes_enc_shift_rows(s);
+//   aes_enc_exp_step(rkp, *(++rcp));
 
-  aes_enc_key_add(s, rkp);
-  memcpy(c, s, 16);
-}
+//   aes_enc_key_add(s, rkp);
+//   memcpy(c, s, 16);
+// }
 
 void aes_enc_mix_columns(aes_gf28_t *s)  {
   for ( int i = 0; i < 4; i++ , s+=4 ) 

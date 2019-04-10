@@ -5,6 +5,7 @@
 # LICENSE.txt within the associated archive or repository).
 
 import numpy, struct, sys
+import matplotlib.pyplot as plt
 
 ## Load  a trace data set from an on-disk file.
 ## 
@@ -82,8 +83,16 @@ def traces_st( f, t, s, M, C, T ) :
 ## \param[in] argc number of command line arguments
 ## \param[in] argv           command line arguments
 
-def attack( argc, argv )
+def attack( argc, argv ):
+  print("Loading data")
+  t, s, M, C, T = traces_ld( argv[1] );
+  print("Loaded data")
+  print("Sample length: ", s)
+  print("Traces length: ", t)
+  plt.plot([i for i in range(s)], T[0, :])
+  plt.savefig('trace0.pdf')
   pass
+
 
 if ( __name__ == '__main__' ) :
   attack( len( sys.argv ), sys.argv )
