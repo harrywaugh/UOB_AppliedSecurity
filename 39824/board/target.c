@@ -143,18 +143,17 @@ void aes     ( uint8_t* c, const uint8_t* m, const uint8_t* k, const uint8_t* r 
     aes_enc_sub_bytes(s);
     aes_enc_shift_rows(s);
     aes_enc_mix_columns(s);
+
     aes_enc_exp_step(rkp, *(++rcp));
-    
     aes_enc_key_add(s, rkp);
-
-
   }
 
   aes_enc_sub_bytes(s);
   aes_enc_shift_rows(s);
-  aes_enc_exp_step(rkp, *(++rcp));
 
+  aes_enc_exp_step(rkp, *(++rcp));
   aes_enc_key_add(s, rkp);
+  
   memcpy(c, s, 16);
 }
 
