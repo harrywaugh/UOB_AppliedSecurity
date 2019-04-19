@@ -8,6 +8,9 @@ import mpld3
 import brewer2mpl
 from matplotlib.patches import Rectangle
 import multiprocessing
+import time
+from multiprocessing import Process, Value, Array
+numpy.seterr(divide='ignore', invalid='ignore')
 # %load_ext line_profiler
 
 hamming_weights = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -36,7 +39,7 @@ sbox = numpy.array([ 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01,
                      0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
                      0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16 ], dtype=numpy.uint8)
 
-def traces_ld( f ) :
+def traces_ld( f, ntraces=1000) :
   fd = open( f, "rb" )
 
   def rd( x ) :
@@ -45,25 +48,28 @@ def traces_ld( f ) :
   t = rd( '<I' )
   s = rd( '<I' )
 
-  M = numpy.zeros( ( t, 16 ), dtype = numpy.uint8 )
-  C = numpy.zeros( ( t, 16 ), dtype = numpy.uint8 )
-  T = numpy.zeros( ( t,  s ), dtype = numpy.int16 )
+  # if(override_n != None):
+  	# t = override_n
 
-  for i in range( t ) :
+  M = numpy.zeros( ( ntraces, 16 ), dtype = numpy.uint8 )
+  C = numpy.zeros( ( ntraces, 16 ), dtype = numpy.uint8 )
+  T = numpy.zeros( ( ntraces,  s ), dtype = numpy.int16 )
+
+  for i in range( ntraces ) :
     for j in range( 16 ) :
       M[ i, j ] = rd( '<B' )
 
-  for i in range( t ) :
+  for i in range( ntraces ) :
     for j in range( 16 ) :
       C[ i, j ] = rd( '<B' )
 
-  for i in range( t ) :
+  for i in range( ntraces ) :
     for j in range( s  ) :
       T[ i, j ] = rd( '<h' )
 
   fd.close()
 
-  return t, s, M, C, T
+  return ntraces, s, M, C, T
 
 def correlation_fn(H_col_diff, T_col_diff):
     HT_col_sum = np.sum(H_col_diff*T_col_diff)
@@ -74,12 +80,13 @@ def correlation_fn(H_col_diff, T_col_diff):
 
     return HT_col_sum / (np.sqrt(HT_sq_col))
 
-def crack_aes(t, s, M, C, T, ntraces=1000, key_bytes=16):
+def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     start_sample = 0
     end_sample = 10000
     nsamples = end_sample-start_sample
     nkeys = 256
-    best_samples, key_guess, best_corrs=[], [], []
+    window_size = 500
+    best_samples, best_corrs=[], []
     H = numpy.zeros((ntraces, 256), dtype = numpy.uint8) # Hypothetical power consumption values
     
     ## Precompute T col diffs for correlation
@@ -92,8 +99,8 @@ def crack_aes(t, s, M, C, T, ntraces=1000, key_bytes=16):
     window_start = start_sample
     window_end   = end_sample
     ## For each byte in the key
-    for b in range(key_bytes):
-        print("\n\nBREAKING BYTE", b)
+    for b in range(start_byte, end_byte):
+        print("BREAKING BYTE", b)
         
         ## Get hypothetical power consumptions
         for ti in range(ntraces):
@@ -113,34 +120,68 @@ def crack_aes(t, s, M, C, T, ntraces=1000, key_bytes=16):
                 correlation = numpy.abs(correlation_fn(H_col_diff, T_col_diffs[si]))
                 if (correlation > max_correlation):
                     max_correlation = correlation
-                    byte = ki
-                    sample=si
-        window_start = sample-500
-        window_end = sample+500
-        key_guess.append(byte)
+                    byte            = ki
+                    sample          = si
+
+        window_start = sample-window_size
+        window_end = sample+window_size
+        key_guess[b%(end_byte-start_byte)] = byte
         best_samples.append(sample)
         best_corrs.append(max_correlation)
-        print(key_guess)        
-        print(best_samples)        
-        print(best_corrs)        
-    print(key_guess)        
-    print(best_samples) 
-    print(best_corrs)  
-        
-    print("KEY GUESS", key_guess)    
-    print("BEST_SAMPLES", best_samples)
+        print(key_guess[:(b%(end_byte-start_byte))+1])        
+    
 
-def attack( argc, argv ):
+        
+    print("\n\nKEY GUESS", key_guess[:])    
+    print("BEST_SAMPLES", best_samples)
+    print("BEST_CORRS", best_corrs)
+
+
+
+
+def worker(M, T, ntraces, key_start, key_end, keys):
+  crack_aes( M, T, ntraces=200, start_byte=key_start, end_byte=key_end, key_guess=keys)
+
+def attack(argc, argv):
   print("Loading data")
-  t, s, M, C, T = traces_ld( argv[1] );
+  ntraces = 200
+  t, s, M, C, T = traces_ld( argv[1], ntraces=1000);
 
   print("Loaded data")
   print("Message Shape: ", M.shape)
   print("Traces Shape: ", T.shape)
 
-  crack_aes(t, s, M, C, T, 200, 16)
 
+  start = time.time()
+  keys0= Array('i', range(8))
+  # keys1= Array('i', range(4))
+  # keys2= Array('i', range(4))
+  keys3= Array('i', range(8))
+  w0 = Process(target=worker, args=(M, T, ntraces, 0, 8, keys0))
+  w0.start()
+  # w1 = Process(target=worker, args=(M, T, ntraces, 4, 8, keys1))
+  # w1.start()
+  # w2 = Process(target=worker, args=(M, T, ntraces, 8, 12, keys2))
+  # w2.start()
+  crack_aes(M, T, ntraces=200, start_byte=8, end_byte=16, key_guess=keys3)
+  w0.join()
+  # w1.join()
+  # w2.join()
+  print(keys0[:])
+  # print(keys1[:])
+  # print(keys2[:])
+  print(keys3[:])
+
+  # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
+  final_list = keys0[:] + keys3[:]
+  print("FINAL KEY GUESS", final_list)
+  # crack_aes(t, s, M, C, T, ntraces)
+  end = time.time()
+  print("\nTime taken to crack 16 bytes: ", end - start)
 
 
 if ( __name__ == '__main__' ) :
   attack( len( sys.argv ), sys.argv )
+
+
+
