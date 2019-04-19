@@ -82,7 +82,7 @@ def correlation_fn(H_col_diff, T_col_diff):
 
 def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     start_sample = 0
-    end_sample = 10000
+    end_sample = 6000
     nsamples = end_sample-start_sample
     nkeys = 256
     window_size = 500
@@ -132,9 +132,9 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     
 
         
-    print("\n\nKEY GUESS", key_guess[:])    
-    print("BEST_SAMPLES", best_samples)
-    print("BEST_CORRS", best_corrs)
+    # print("\n\nKEY GUESS", key_guess[:])    
+    # print("BEST_SAMPLES", best_samples)
+    # print("BEST_CORRS", best_corrs)
 
 
 
@@ -153,10 +153,11 @@ def attack(argc, argv):
 
 
   start = time.time()
-  keys0= Array('i', range(8))
-  # keys1= Array('i', range(4))
-  # keys2= Array('i', range(4))
-  keys3= Array('i', range(8))
+  nworkers = 2
+  keys0= Array('i', range(16/nworkers))
+  # keys1= Array('i', range(16/nworkers))
+  # keys2= Array('i', range(16/nworkers))
+  keys3= Array('i', range(16/nworkers))
   w0 = Process(target=worker, args=(M, T, ntraces, 0, 8, keys0))
   w0.start()
   # w1 = Process(target=worker, args=(M, T, ntraces, 4, 8, keys1))
@@ -175,7 +176,6 @@ def attack(argc, argv):
   # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
   final_list = keys0[:] + keys3[:]
   print("FINAL KEY GUESS", final_list)
-  # crack_aes(t, s, M, C, T, ntraces)
   end = time.time()
   print("\nTime taken to crack 16 bytes: ", end - start)
 
