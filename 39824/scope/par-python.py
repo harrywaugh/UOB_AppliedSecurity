@@ -154,10 +154,10 @@ def attack(argc, argv):
 
   start = time.time()
   nworkers = 2
-  keys0= Array('i', range(16/nworkers))
+  keys0= Array('i', range(int(16/nworkers)))
   # keys1= Array('i', range(16/nworkers))
   # keys2= Array('i', range(16/nworkers))
-  keys3= Array('i', range(16/nworkers))
+  keys3= Array('i', range(int(16/nworkers)))
   w0 = Process(target=worker, args=(M, T, ntraces, 0, 8, keys0))
   w0.start()
   # w1 = Process(target=worker, args=(M, T, ntraces, 4, 8, keys1))
