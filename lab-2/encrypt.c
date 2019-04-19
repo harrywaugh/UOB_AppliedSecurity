@@ -69,34 +69,49 @@ aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
 aes_gf28_t gf28_t_mulx( aes_gf28_t a );
 
 
-int main( int argc, char* argv[] ) {
-  uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-                      0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-  uint8_t m[ 16 ] = { 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
-                      0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
-
-  uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
-                      0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
-
-
-  uint8_t t[ 16 ];
-
-
-  aes_enc(t, m, k);
-
-  if( !memcmp( t, c, 16 * sizeof( uint8_t ) ) ) {
-    printf( "AES.Enc( k, m ) == c\n" );
-  }
-  else {
-    printf( "AES.Enc( k, m ) != c\n" );
-  }
-}
-
 void print_arr(aes_gf28_t *arr)  {
   for ( int i = 0; i < 16; i++)
     printf("%02X ", arr[i]);
   printf("\n\n");
 }
+
+int main( int argc, char* argv[] ) {
+  // uint8_t k[ 16 ] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+  //                     0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+  // uint8_t m[ 16 ] = { 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D,
+  //                     0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34 };
+
+  // uint8_t c[ 16 ] = { 0x39, 0x25, 0x84, 0x1D, 0x02, 0xDC, 0x09, 0xFB,
+  //                     0xDC, 0x11, 0x85, 0x97, 0x19, 0x6A, 0x0B, 0x32 };
+  uint8_t k0[ 16 ] = {128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103};
+  uint8_t m0[ 16 ] = {0xb7, 0x42, 0xc7, 0x58, 0x7f, 0x77, 0x3b, 0x1f, 0x34, 0x5d, 0xf7, 0xae, 0x6c, 0x1c, 0xd8, 0xb7};
+  uint8_t c0[ 16 ] = {0x60, 0x55, 0xcf, 0xb, 0x37, 0x94, 0xf1, 0x1b, 0xb3, 0x17, 0xad, 0xb0, 0x90, 0x8e, 0x51, 0x3f};
+
+  uint8_t t[ 16 ];
+
+
+  for (int j = 0; j < 256; j++)  {
+    for (int i = 0; i < 256; i++)  {
+      k0[0]=(uint8_t)i;
+      k0[13]=(uint8_t)j;
+      // printf("%u\n", (uint8_t)i);
+      aes_enc(t, m0, k0);
+      // print_arr(t);
+      if( !memcmp( t, c0, 16 * sizeof( uint8_t ) ) ) {
+        printf( "AES.Enc( k, m ) == c\n" );
+      }
+      else {
+        // printf( "AES.Enc( k, m ) != c\n" );
+      }
+    }
+  }
+
+
+
+
+}
+
+
 
 void transpose(uint8_t *arr1, uint8_t *arr2)  {
   arr1[0] = arr2[0];
@@ -123,7 +138,7 @@ void transpose(uint8_t *arr1, uint8_t *arr2)  {
 
 void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k)  {
   aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
-  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
+  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare current' round key and state matrices
   
   aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
   aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
