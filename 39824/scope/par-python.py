@@ -306,7 +306,7 @@ def worker(M, T, ntraces, key_start, key_end, keys):
 
 def attack(argc, argv):
   print("Loading data")
-  ntraces = 200
+  ntraces = 90
   t, s, M, C, T = traces_ld( argv[1], ntraces=1000);
 
   print("Loaded data")
@@ -326,7 +326,7 @@ def attack(argc, argv):
   w1.start()
   w2 = Process(target=worker, args=(M, T, ntraces, 8, 12, keys2))
   w2.start()
-  crack_aes(M, T, ntraces=200, start_byte=12, end_byte=16, key_guess=keys3)
+  crack_aes(M, T, ntraces=ntraces, start_byte=12, end_byte=16, key_guess=keys3)
   w0.join()
   w1.join()
   w2.join()
@@ -340,6 +340,15 @@ def attack(argc, argv):
   print("FINAL KEY GUESS", final_list)
   end = time.time()
   print("\nTime taken to crack 16 bytes: ", end - start)
+  actual_key = [128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103]
+  correct = True
+  for i in range(len(final_list)):
+    if (actual_key[i] != final_list[i]):
+       correct = False
+  if(correct):
+    print("\nCORRECT KEY")
+  else:
+    print("\nINCORRECT KEY")
 
 if ( __name__ == '__main__' ) :
   attack( len( sys.argv ), sys.argv )
