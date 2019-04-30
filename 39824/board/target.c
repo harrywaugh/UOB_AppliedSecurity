@@ -196,14 +196,14 @@ int main( int argc, char* argv[] ) {
   uint8_t k[ SIZEOF_KEY ] = { 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13};
 
   while( true ) {
-    my_print("Inspect (01:00) or ENCRYPT (01:01): ");
+    // my_print("Inspect (01:00) or ENCRYPT (01:01): ");
 
     if( 1 != octetstr_rd( cmd, 1 ) ) {
       break;
     }
     switch( cmd[ 0 ] ) {
       case COMMAND_INSPECT : {
-        my_print("Inspect: ");
+        // my_print("Inspect: ");
 
         uint8_t t = SIZEOF_BLK; 
         octetstr_wr( &t, 1 ); 
@@ -215,7 +215,7 @@ int main( int argc, char* argv[] ) {
         break;
       }
       case COMMAND_ENCRYPT : {
-        my_print("Encrypt: ");
+        // my_print("Encrypt: ");
 
         if( SIZEOF_BLK != octetstr_rd( m, SIZEOF_BLK ) ) {
           break;
@@ -230,7 +230,7 @@ int main( int argc, char* argv[] ) {
         aes     ( c, m, k, r );
         scale_gpio_wr( SCALE_GPIO_PIN_TRG, false );
 
-                          octetstr_wr( c, SIZEOF_BLK );
+        octetstr_wr( c, SIZEOF_BLK );
 
         break;
       }
@@ -329,7 +329,7 @@ void octetstr_wr( const uint8_t* x, uint8_t n_x )  {
     scale_uart_wr(SCALE_UART_MODE_BLOCKING, hex_chars[1]);
   }
   scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0D');
-  scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0A');
+  // scale_uart_wr( SCALE_UART_MODE_BLOCKING, '\x0A');
 }
 
 

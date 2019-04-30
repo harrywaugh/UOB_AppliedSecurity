@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 import scipy
-import mpld3
-import brewer2mpl
 from matplotlib.patches import Rectangle
 import multiprocessing
 import time
@@ -13,167 +11,185 @@ from multiprocessing import Process, Value, Array
 numpy.seterr(divide='ignore', invalid='ignore')
 # %load_ext line_profiler
 
-# import binascii, select, serial, socket, sys, picoscope.ps2000a as ps2000a, time, numpy
+import binascii, select, serial, socket, sys, picoscope.ps2000a as ps2000a, time, numpy, argparse
 
-# PS2000A_RATIO_MODE_NONE      = 0 # Section 3.18.1
+PS2000A_RATIO_MODE_NONE      = 0 # Section 3.18.1
 
-# def scope_adc2volts( range, x ) :
-#     return ( float( x ) / float( scope_adc_max ) ) * range;
+def scope_adc2volts( range, x ) :
+    return ( float( x ) / float( scope_adc_max ) ) * range;
 
-# def scope_volts2adc( range, x ) :
-#     return ( float( x ) * float( scope_adc_max ) ) / range;
+def scope_volts2adc( range, x ) :
+    return ( float( x ) * float( scope_adc_max ) ) / range;
 
-# ## Convert a string (e.g., string, or bytearray) into a list (or sequence).
-# ##
-# ## \param[in] x  a  string
-# ## \return       a  list   r st. r[ i ] = ord( x[ i ] )
+## Convert a string (e.g., string, or bytearray) into a list (or sequence).
+##
+## \param[in] x  a  string
+## \return       a  list   r st. r[ i ] = ord( x[ i ] )
 
-# def str2seq( x ) :
-#     return          [ ord( t ) for t in x ]
+def str2seq( x ) :
+    return          [ ord( t ) for t in x ]
 
-# ## Convert a list (or sequence) into a string (e.g., string, or bytearray).
-# ##
-# ## \param[in] x  a  list
-# ## \return       a  string r st. r[ i ] = chr( x[ i ] )
+## Convert a list (or sequence) into a string (e.g., string, or bytearray).
+##
+## \param[in] x  a  list
+## \return       a  string r st. r[ i ] = chr( x[ i ] )
 
-# def seq2str( x ) :
-#     return ''.join( [ chr( t ) for t in x ] )
+def seq2str( x ) :
+    return ''.join( [ chr( t ) for t in x ] )
 
-# ## Open  (or start)  communication with SCALE development board.
-# ##
-# ## \return    fd a communication end-point
+## Open  (or start)  communication with SCALE development board.
+##
+## \return    fd a communication end-point
 
-# def board_open() :
-#     if   ( args.mode == 'uart'   ) :
-#         fd = serial.Serial( port = args.uart, baudrate = 9600, bytesize = serial.EIGHTBITS, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, timeout = None )
-#     elif ( args.mode == 'socket' ) :
-#         fd = socket.socket( socket.AF_INET, socket.SOCK_STREAM ) ; fd.connect( ( args.host, args.port ) ) ; fd = fd.makefile( mode = 'rwb', bufsize = 1024 )
+def board_open() :
+    # if   ( args.mode == 'uart'   ) :
+    fd = serial.Serial( port = args.uart, baudrate = 9600, bytesize = serial.EIGHTBITS, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, timeout = None )
+    # elif ( args.mode == 'socket' ) :
+        # fd = socket.socket( socket.AF_INET, socket.SOCK_STREAM ) ; fd.connect( ( args.host, args.port ) ) ; fd = fd.makefile( mode = 'rwb', bufsize = 1024 )
 
-#     return fd
+    return fd
 
-# ## Close (or finish) communication with SCALE development board.
-# ##
-# ## \param[in] fd a communication end-point
+## Close (or finish) communication with SCALE development board.
+##
+## \param[in] fd a communication end-point
 
-# def board_close( fd ) :
-#     fd.close()
+def board_close( fd ) :
+    fd.close()
 
-# ## Read  (or recieve) a string from SCALE development board, automatically
-# ## managing CR-only EOL semantics.
-# ##
-# ## \param[in] fd a communication end-point
-# ## \return    r  a string (e.g., string, or bytearray)
+## Read  (or recieve) a string from SCALE development board, automatically
+## managing CR-only EOL semantics.
+##
+## \param[in] fd a communication end-point
+## \return    r  a string (e.g., string, or bytearray)
 
-# def board_rdln( fd    ) :
-#     r = ''
+def board_rdln( fd    ) :
+    r = ''
 
-#     while( True ):
-#         t = fd.read( 1 )
+    while( True ):
+        t = fd.read( 1 )
+        print(t)
+        if( t == '\x0D' ) :
+            break
+        else:
+            r += t
 
-#         if( t == '\x0D' ) :
-#             break
-#         else:
-#             r += t
+    return r
 
-#     return r
+## Write (or send)    a string to   SCALE development board, automatically
+## managing CR-only EOL semantics.
+##
+## \param[in] fd a communication end-point
+## \param[in] x  a string (e.g., string, or bytearray)
 
-# ## Write (or send)    a string to   SCALE development board, automatically
-# ## managing CR-only EOL semantics.
-# ##
-# ## \param[in] fd a communication end-point
-# ## \param[in] x  a string (e.g., string, or bytearray)
+def board_wrln( fd, x ) :
+    fd.write( x + '\x0D' ) ; fd.flush()
 
-# def board_wrln( fd, x ) :
-#     fd.write( x + '\x0D' ) ; fd.flush()
+## Convert a length-prefixed, hexadecimal octet string into a string.
+##
+## \param[in] x  an octet string
+## \return       a  string
+## \throw        ValueError if the length prefix and data do not match
 
-# ## Convert a length-prefixed, hexadecimal octet string into a string.
-# ##
-# ## \param[in] x  an octet string
-# ## \return       a  string
-# ## \throw        ValueError if the length prefix and data do not match
+def octetstr2str( x ) :
+    t = x.split( ':' ) ; n = int( t[ 0 ], 16 ) ; x = binascii.a2b_hex( t[ 1 ] )
 
-# def octetstr2str( x ) :
-#     t = x.split( ':' ) ; n = int( t[ 0 ], 16 ) ; x = binascii.a2b_hex( t[ 1 ] )
+    if( n != len( x ) ) :
+        raise ValueError
+    else :
+        return x
 
-#     if( n != len( x ) ) :
-#         raise ValueError
-#     else :
-#         return x
+## Convert a string into a length-prefixed, hexadecimal octet string.
+##
+## \param[in] x  an octet string
+## \return       a  string
 
-# ## Convert a string into a length-prefixed, hexadecimal octet string.
-# ##
-# ## \param[in] x  an octet string
-# ## \return       a  string
+def str2octetstr( x ) :
+    return ( '%02X' % ( len( x ) ) ) + ':' + ( binascii.b2a_hex( x ) )
 
-# def str2octetstr( x ) :
-#     return ( '%02X' % ( len( x ) ) ) + ':' + ( binascii.b2a_hex( x ) )
+def get_traces(ntraces) :
 
-# def attack() :
-#     # Section 3.32, Page 60; Step  1: open  the oscilloscope
-#     scope = ps2000a.PS2000a()
 
-#     # Section 3.28, Page 56
-#     scope_adc_min = scope.getMinValue()
-#     # Section 3.30, Page 58
-#     scope_adc_max = scope.getMaxValue()
+    # Section 3.32, Page 60; Step  1: open  the oscilloscope
+    # scope = ps2000a.PS2000a()
 
-#     # Section 3.39, Page 69; Step  2: configure channels
-#     scope.setChannel( channel = 'A', enabled = True, coupling = 'DC', VRange =   5.0E-0 )
-#     scope_range_chan_a =   5.0e-0
-#     scope.setChannel( channel = 'B', enabled = True, coupling = 'DC', VRange = 500.0E-3 )
-#     scope_range_chan_b = 500.0e-3
+    fd = board_open()
 
-#     # Section 3.13, Page 36; Step  3: configure timebase
-#     ( _, samples, samples_max ) = scope.setSamplingInterval( 4.0E-9, 2.0E-3 )
+    t = ntraces
 
-#     # Section 3.56, Page 93; Step  4: configure trigger
-#     scope.setSimpleTrigger( 'A', threshold_V = 2.0E-0, direction = 'Rising', timeout_ms = 0 )
+    # T = numpy.zeros((t, samples))
+    M = numpy.zeros((t, 16))
+    C = numpy.zeros((t, 16))
 
-#     fd = board_open()
+    for i in range(t):
 
-#     t = 200
+        print("Getting Trace", i)
 
-#     T = numpy.zeros((t, samples))
-#     M = numpy.zeros((t, 16))
-#     C = numpy.zeros((t, 16))
+        # # Section 3.28, Page 56
+        # scope_adc_min = scope.getMinValue()
+        # # Section 3.30, Page 58
+        # scope_adc_max = scope.getMaxValue()
 
-#     for i in range(t):
-#         # Section 3.37, Page 65; Step  5: start acquisition
-#         scope.runBlock()
+        # # Section 3.39, Page 69; Step  2: configure channels
+        # scope.setChannel( channel = 'A', enabled = True, coupling = 'DC', VRange =   5.0E-0 )
+        # scope_range_chan_a =   5.0e-0
+        # scope.setChannel( channel = 'B', enabled = True, coupling = 'DC', VRange = 500.0E-3 )
+        # scope_range_chan_b = 500.0e-3
 
-#         m = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x08,
-#              0x09, 0x0A, 0x0B, 0X0C, 0X0D, 0X0E, 0X0F]
+        # Section 3.13, Page 36; Step  3: configure timebase
+        # ( _, samples, samples_max ) = scope.setSamplingInterval( 4.0E-9, 2.0E-3 )
+        # T = numpy.zeros((samples))
 
-#         board_wrln( fd, "01:01" )
-#         board_wrln( fd, str2octetstr( seq2str( m ) ) )
-#         board_wrln( fd, "00:" )
+        # # Section 3.  56, Page 93; Step  4: configure trigger
+        # scope.setSimpleTrigger( 'A', threshold_V = 2.0E-0, direction = 'Rising', timeout_ms = 0 )
 
-#         c = str2seq( octetstr2str( board_rdln( fd ) ) )
 
-#         for n in range(16):
-#             M[i,n] = m[n]
-#             C[i,n] = c[n]
+        # Section 3.37, Page 65; Step  5: start acquisition
+        # scope.runBlock()
 
-#         # Section 3.26, Page 54; Step  6: wait for acquisition to complete
-#         while ( not scope.isReady() ) : time.sleep( 1 )
+        m = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x08,
+             0x09, 0x0A, 0x0B, 0X0C, 0X0D, 0X0E, 0X0F]
+        print("Chosen Message")
 
-#         # Section 3.40, Page 71; Step  7: configure buffers
-#         # Section 3.18, Page 43; Step  8; transfer  buffers
-#         ( A, _, _ ) = scope.getDataRaw( channel = 'A', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
-#         ( B, _, _ ) = scope.getDataRaw( channel = 'B', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
 
-#         # Section 3.2,  Page 25; Step 10: stop  acquisition
-#         scope.stop()
+        # Section 3.26, Page 54; Step  6: wait for acquisition to complete
+        # while ( not scope.isReady() ) : time.sleep( 1 )
 
-#         for j in range(samples):
-#             T[i,j] = scope_adc2volts( scope_range_chan_b, B[ i ] )
+        board_wrln( fd, '01:01' )
+        board_wrln( fd, str2octetstr( seq2str( m ) ) )
+        board_wrln( fd, '00:' )
+          
+        print("Reading from board")
+        line = board_rdln( fd )
+        print("Reading Line")
+        oct_str = octetstr2str( line )
+        print("Got octet string")
 
-#     board_close( fd )
+        c = str2seq( oct_str )
 
-#     # Section 3.2,  Page 25; Step 13: close the oscilloscope
-#     scope.close()
+        for n in range(16):
+            M[i, n] = m[n]
+            C[i, n] = c[n]
 
-#     return t, samples, M, C, T
+        print("Message", m)
+        print("Ciphertext", c)
+
+        # Section 3.40, Page 71; Step  7: configure buffers
+        # Section 3.18, Page 43; Step  8; transfer  buffers
+        # ( A, _, _ ) = scope.getDataRaw( channel = 'A', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
+        # ( B, _, _ ) = scope.getDataRaw( channel = 'B', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
+
+        # # Section 3.2,  Page 25; Step 10: stop  acquisition
+        # scope.stop()
+
+        # for j in range(samples):
+        #     T[j] = scope_adc2volts( scope_range_chan_b, B[ i ] )
+
+    board_close( fd )
+
+    # Section 3.2,  Page 25; Step 13: close the oscilloscope
+    scope.close()
+
+    return t, samples, M, C, T
 
 
 hamming_weights = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -264,7 +280,6 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     window_end   = end_sample
     ## For each byte in the key
     for b in range(start_byte, end_byte):
-        print("BREAKING BYTE", b)
         
         ## Get hypothetical power consumptions
         for ti in range(ntraces):
@@ -292,7 +307,8 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
         key_guess[b%(end_byte-start_byte)] = byte
         best_samples.append(sample)
         best_corrs.append(max_correlation)
-        print(key_guess[:(b%(end_byte-start_byte))+1])        
+        print("BREAKING BYTE", b)
+              
     
 
         
@@ -306,8 +322,12 @@ def worker(M, T, ntraces, key_start, key_end, keys):
 
 def attack(argc, argv):
   print("Loading data")
-  ntraces = 90
-  t, s, M, C, T = traces_ld( argv[1], ntraces=1000);
+  ntraces = 200
+  # t, s, M, C, T = traces_ld( argv[1], ntraces=1000);
+
+  t, s, M, C, T = get_traces(ntraces=ntraces)
+
+
 
   print("Loaded data")
   print("Message Shape: ", M.shape)
@@ -315,28 +335,28 @@ def attack(argc, argv):
 
 
   start = time.time()
-  nworkers = 4
+  nworkers = 2
   keys0= Array('i', range(int(16/nworkers)))
-  keys1= Array('i', range(int(16/nworkers)))
-  keys2= Array('i', range(int(16/nworkers)))
+  # keys1= Array('i', range(int(16/nworkers)))
+  # keys2= Array('i', range(int(16/nworkers)))
   keys3= Array('i', range(int(16/nworkers)))
-  w0 = Process(target=worker, args=(M, T, ntraces, 0, 4, keys0))
+  w0 = Process(target=worker, args=(M, T, ntraces, 0, 8, keys0))
   w0.start()
-  w1 = Process(target=worker, args=(M, T, ntraces, 4, 8, keys1))
-  w1.start()
-  w2 = Process(target=worker, args=(M, T, ntraces, 8, 12, keys2))
-  w2.start()
-  crack_aes(M, T, ntraces=ntraces, start_byte=12, end_byte=16, key_guess=keys3)
+  # w1 = Process(target=worker, args=(M, T, ntraces, 4, 8, keys1))
+  # w1.start()
+  # w2 = Process(target=worker, args=(M, T, ntraces, 8, 12, keys2))
+  # w2.start()
+  crack_aes(M, T, ntraces=ntraces, start_byte=8, end_byte=16, key_guess=keys3)
   w0.join()
-  w1.join()
-  w2.join()
+  # w1.join()
+  # w2.join()
   print(keys0[:])
-  print(keys1[:])
-  print(keys2[:])
+  # print(keys1[:])
+  # print(keys2[:])
   print(keys3[:])
 
-  final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
-  # final_list = keys0[:] + keys3[:]
+  # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
+  final_list = keys0[:] + keys3[:]
   print("FINAL KEY GUESS", final_list)
   end = time.time()
   print("\nTime taken to crack 16 bytes: ", end - start)
@@ -350,8 +370,21 @@ def attack(argc, argv):
   else:
     print("\nINCORRECT KEY")
 
+
+
 if ( __name__ == '__main__' ) :
+
+  
+  parser = argparse.ArgumentParser()
+
+
+  parser.add_argument( '--uart', dest = 'uart', type = str, action = 'store', default = '/dev/scale-board' )
+
+  args = parser.parse_args()
+
+
+
   attack( len( sys.argv ), sys.argv )
 
-
+  # execute client implementation
 
