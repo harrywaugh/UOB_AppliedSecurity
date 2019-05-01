@@ -222,10 +222,10 @@ def correlation_fn(H_col_diff, T_col_diff):
 
 def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     start_sample = 0
-    end_sample = 6000
+    end_sample = 8000
     nsamples = end_sample-start_sample
     nkeys = 256
-    window_behind = 0
+    window_behind = 300
     window_ahead = 300
     best_samples, best_corrs=[], []
     H = numpy.zeros((ntraces, 256), dtype = numpy.uint8) # Hypothetical power consumption values
@@ -347,8 +347,6 @@ if ( __name__ == '__main__' ) :
   parser.add_argument( '--data', dest = 'data', type = str, action = 'store' )
 
   args = parser.parse_args()
-
-
   attack( len( sys.argv ), sys.argv )
 
   # execute client implementation
