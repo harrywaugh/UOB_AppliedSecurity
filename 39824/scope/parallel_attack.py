@@ -9,6 +9,7 @@ import multiprocessing
 import time
 from multiprocessing import Process, Value, Array
 numpy.seterr(divide='ignore', invalid='ignore')
+import timeit
 # %load_ext line_profiler
 
 import binascii, select, serial, socket, sys, picoscope.ps2000a as ps2000a, time, numpy, argparse
@@ -56,7 +57,6 @@ def board_rdln( fd    ) :
 
     while( True ):
         t = fd.read( 1 )
-        print(t)
         if( t == '\x0D' ) :
             break
         else:
@@ -71,86 +71,82 @@ def get_traces(ntraces) :
 
 
     # Section 3.32, Page 60; Step  1: open  the oscilloscope
-    # scope = ps2000a.PS2000a()
+    scope = ps2000a.PS2000a()
 
     fd = board_open()
 
     t = ntraces
+    s = 10000
+    T = numpy.zeros((t, s))
+    M = numpy.zeros((t, 16), dtype=np.uint8)
+    C = numpy.zeros((t, 16), dtype=np.uint8)
+    time.sleep( 1 )
 
-    # T = numpy.zeros((t, samples))
-    M = numpy.zeros((t, 16))
-    C = numpy.zeros((t, 16))
+        # # Section 3.28, Page 56
+    scope_adc_min = scope.getMinValue()
+    # # Section 3.30, Page 58
+    scope_adc_max = scope.getMaxValue()
+
+    # # Section 3.39, Page 69; Step  2: configure channels
+    scope.setChannel( channel = 'A', enabled = True, coupling = 'DC', VRange =   5.0E-0 )
+    scope_range_chan_a =   5.0e-0
+    scope.setChannel( channel = 'B', enabled = True, coupling = 'DC', VRange = 500.0E-3 )
+    scope_range_chan_b = 500.0e-3
+
+    sample_interval = 4.0e-9
+
+    # Section 3.13, Page 36; Step  3: configure timebase
+    ( _, samples, samples_max ) = scope.setSamplingInterval( 4.0e-9, 2*s * sample_interval)
+# 
+    # # Section 3.  56, Page 93; Step  4: configure trigger
+    scope.setSimpleTrigger( 'A', threshold_V = 2.0E-0, direction = 'Rising', timeout_ms = 0 )
 
     for i in range(t):
 
         print("Getting Trace", i)
 
-        # # Section 3.28, Page 56
-        # scope_adc_min = scope.getMinValue()
-        # # Section 3.30, Page 58
-        # scope_adc_max = scope.getMaxValue()
 
-        # # Section 3.39, Page 69; Step  2: configure channels
-        # scope.setChannel( channel = 'A', enabled = True, coupling = 'DC', VRange =   5.0E-0 )
-        # scope_range_chan_a =   5.0e-0
-        # scope.setChannel( channel = 'B', enabled = True, coupling = 'DC', VRange = 500.0E-3 )
-        # scope_range_chan_b = 500.0e-3
 
-        # Section 3.13, Page 36; Step  3: configure timebase
-        # ( _, samples, samples_max ) = scope.setSamplingInterval( 4.0E-9, 2.0E-3 )
-        # T = numpy.zeros((samples))
-
-        # # Section 3.  56, Page 93; Step  4: configure trigger
-        # scope.setSimpleTrigger( 'A', threshold_V = 2.0E-0, direction = 'Rising', timeout_ms = 0 )
-
+        m = np.random.randint(256, size=16)
 
         # Section 3.37, Page 65; Step  5: start acquisition
-        # scope.runBlock()
-
-        m = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x08,
-             0x09, 0x0A, 0x0B, 0X0C, 0X0D, 0X0E, 0X0F]
-        print("Chosen Message")
-
-
-        # Section 3.26, Page 54; Step  6: wait for acquisition to complete
-        # while ( not scope.isReady() ) : time.sleep( 1 )
+        scope.runBlock()
 
         board_wrln( fd, '01:01' )
         board_wrln( fd, str2octetstr( seq2str( m ) ) )
         board_wrln( fd, '00:' )
-          
-        print("Reading from board")
-        line = board_rdln( fd )
-        print("Reading Line")
-        oct_str = octetstr2str( line )
-        print("Got octet string")
+        # Section 3.26, Page 54; Step  6: wait for acquisition to complete
+        while ( not scope.isReady() ) : time.sleep( 1 )
 
-        c = str2seq( oct_str )
+        c = str2seq( octetstr2str( board_rdln( fd ) ) )
 
-        for n in range(16):
-            M[i, n] = m[n]
-            C[i, n] = c[n]
+        M[i] = m
+        C[i] = c
 
-        print("Message", m)
-        print("Ciphertext", c)
+        # print("Message", m)
+        # print("Ciphertext", c)
+
 
         # Section 3.40, Page 71; Step  7: configure buffers
         # Section 3.18, Page 43; Step  8; transfer  buffers
-        # ( A, _, _ ) = scope.getDataRaw( channel = 'A', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
-        # ( B, _, _ ) = scope.getDataRaw( channel = 'B', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
+        ( A, _, _ ) = scope.getDataRaw( channel = 'A', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
+        ( B, _, _ ) = scope.getDataRaw( channel = 'B', numSamples = samples, downSampleMode = PS2000A_RATIO_MODE_NONE )
 
         # # Section 3.2,  Page 25; Step 10: stop  acquisition
-        # scope.stop()
+        scope.stop()
 
-        # for j in range(samples):
-        #     T[j] = scope_adc2volts( scope_range_chan_b, B[ i ] )
+        T[i] = B[:s]
+
+        # fig, ax = plt.subplots()
+        # ax.plot(T[i])
+        # plt.show()
+    scope.close() 
 
     board_close( fd )
 
     # Section 3.2,  Page 25; Step 13: close the oscilloscope
-    scope.close()
 
-    return t, samples, M, C, T
+    return t, s, M, C, T
 
 
 hamming_weights = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -225,8 +221,8 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     end_sample = 8000
     nsamples = end_sample-start_sample
     nkeys = 256
-    window_behind = 300
-    window_ahead = 300
+    window_behind = 1000
+    window_ahead = 1000
     best_samples, best_corrs=[], []
     H = numpy.zeros((ntraces, 256), dtype = numpy.uint8) # Hypothetical power consumption values
     
@@ -276,7 +272,7 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
 
 
 def worker(M, T, ntraces, key_start, key_end, keys):
-  crack_aes( M, T, ntraces=200, start_byte=key_start, end_byte=key_end, key_guess=keys)
+  crack_aes( M, T, ntraces=ntraces, start_byte=key_start, end_byte=key_end, key_guess=keys)
 
 def attack(argc, argv):
   
@@ -296,7 +292,7 @@ def attack(argc, argv):
   print("Traces Shape: ", T.shape)
 
 
-  start = time.time()
+  start = timeit.default_timer()
   nworkers = 2
   keys0= Array('i', range(int(16/nworkers)))
   # keys1= Array('i', range(int(16/nworkers)))
@@ -320,9 +316,11 @@ def attack(argc, argv):
   # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
   final_list = keys0[:] + keys3[:]
   print("FINAL KEY GUESS", final_list)
-  end = time.time()
+  print("FINAL KEY GUESS", [hex(x) for x in final_list])
+  end = timeit.default_timer()
   print("\nTime taken to crack 16 bytes: ", end - start)
   actual_key = [128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103]
+  actual_key_mine  = [ 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13]
   correct = True
   for i in range(len(final_list)):
     if (actual_key[i] != final_list[i]):
