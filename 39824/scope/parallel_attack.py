@@ -207,16 +207,16 @@ def traces_ld( f, ntraces=1000) :
 
   return ntraces, s, M, C, T
 
-def correlation_fn(H_col_diff, T_col_diff):
-    HT_col_sum = np.sum(H_col_diff*T_col_diff)
+# def correlation_fn(H_col_diff, T_col_diff):
+#     HT_col_sum = np.sum(H_col_diff*T_col_diff)
 
-    H_col_sq_sum  = np.sum(np.square(H_col_diff))
-    T_col_sq_sum  = np.sum(np.square(T_col_diff))
-    HT_sq_col     = H_col_sq_sum*T_col_sq_sum
+#     H_col_sq_sum  = np.sum(np.square(H_col_diff))
+#     T_col_sq_sum  = np.sum(np.square(T_col_diff))
+#     HT_sq_col     = H_col_sq_sum*T_col_sq_sum
 
-    return HT_col_sum / (np.sqrt(HT_sq_col))
+#     return HT_col_sum / (np.sqrt(HT_sq_col))
 
-def corr2_coeff(A,B):
+def get_correllation_matrix(A,B):
     # Rowwise mean of input arrays & subtract from input arrays themeselves
     A_mA = A - A.mean(1)[:,None]
     B_mB = B - B.mean(1)[:,None]
@@ -229,29 +229,29 @@ def corr2_coeff(A,B):
     return np.dot(A_mA,B_mB.T)/np.sqrt(np.dot(ssA[:,None],ssB[None]))
 
 
-def generate_correlation_map(x, y):
-    mu_x = x.mean(axis=1)
-    mu_y = y.mean(axis=1)
+# def generate_correlation_map(x, y):
+#     mu_x = x.mean(axis=1)
+#     mu_y = y.mean(axis=1)
 
-    n = x.shape[1]
-    if n != y.shape[1]:
-        raise ValueError('x and y must have the same number of timepoints.')
-    s_x = x.std(axis=1, ddof=n-1)
-    s_y = y.std(axis=1, ddof=n-1)
+#     n = x.shape[1]
+#     if n != y.shape[1]:
+#         raise ValueError('x and y must have the same number of timepoints.')
+#     s_x = x.std(axis=1, ddof=n-1)
+#     s_y = y.std(axis=1, ddof=n-1)
 
-    xy = np.matmul(x, y.T)
+#     xy = np.matmul(x, y.T)
 
-    mu_xy = np.dot(mu_x[:, np.newaxis], mu_y[np.newaxis, :])
+#     mu_xy = np.dot(mu_x[:, np.newaxis], mu_y[np.newaxis, :])
 
-    cov = xy - n * mu_xy
-    return cov / np.dot(s_x[:, np.newaxis], s_y[np.newaxis, :])
+#     cov = xy - n * mu_xy
+#     return cov / np.dot(s_x[:, np.newaxis], s_y[np.newaxis, :])
 
 
 def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     start_sample = 0
     end_sample = 10000
-    window_behind = 1000
-    window_ahead = 1000
+    window_behind = 2000
+    window_ahead = 2000
 
     nkeys = 256
     H = numpy.zeros((ntraces, 256), dtype = numpy.uint8) # Hypothetical power consumption values
@@ -269,14 +269,15 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
             for ki in range(nkeys):
                 H[ti, ki] = hamming_weights[sbox[M[ti, b] ^ ki]]
 
-
         T2 = T[:ntraces, window_start:window_end]
 
-        correlation_matrix  = np.abs(corr2_coeff(H.T, T2.T))
+        correlation_matrix  = np.abs(get_correllation_matrix(H.T, T2.T))
 
         byte   = np.nanargmax(np.nanmax(correlation_matrix, axis=1))
-        sample = np.nanargmax(correlation_matrix[byte])
+        sample = window_start + np.nanargmax(correlation_matrix[byte])
 
+        window_start = sample - window_behind
+        window_end   = sample + window_ahead
 
         key_guess[b%(end_byte-start_byte)] = byte
         print("BROKEN BYTE", b , "=", byte, "at sample", sample)
@@ -287,15 +288,13 @@ def worker(M, T, ntraces, key_start, key_end, keys):
 
 def attack(argc, argv):
   
-  ntraces = 200
+  ntraces = 150
   if(args.file == None):
     print("Getting traces from board")
     t, s, M, C, T = get_traces(ntraces=ntraces)
   else:
     print("Loading traces from file")
     t, s, M, C, T = traces_ld( args.file, ntraces=1000);
-
-
 
 
   print("Loaded data")
@@ -319,10 +318,6 @@ def attack(argc, argv):
   w0.join()
   # w1.join()
   # w2.join()
-  print(keys0[:])
-  # print(keys1[:])
-  # print(keys2[:])
-  print(keys3[:])
 
   # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
   final_list = keys0[:] + keys3[:]
