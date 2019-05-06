@@ -230,26 +230,8 @@ def corr2_coeff(A,B):
 
 
 def generate_correlation_map(x, y):
-    """Correlate each n with each m.
-
-    Parameters
-    ----------
-    x : np.array
-      Shape N X T.
-
-    y : np.array
-      Shape M X T.
-
-    Returns
-    -------
-    np.array
-      N X M array in which each element is a correlation coefficient.
-
-    """
     mu_x = x.mean(axis=1)
     mu_y = y.mean(axis=1)
-
-
 
     n = x.shape[1]
     if n != y.shape[1]:
@@ -261,27 +243,19 @@ def generate_correlation_map(x, y):
 
     mu_xy = np.dot(mu_x[:, np.newaxis], mu_y[np.newaxis, :])
 
-
     cov = xy - n * mu_xy
     return cov / np.dot(s_x[:, np.newaxis], s_y[np.newaxis, :])
 
 
 def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
     start_sample = 0
-    end_sample = 8000
-    nsamples = end_sample-start_sample
-    nkeys = 256
+    end_sample = 10000
     window_behind = 1000
     window_ahead = 1000
-    best_samples, best_corrs=[], []
+
+    nkeys = 256
     H = numpy.zeros((ntraces, 256), dtype = numpy.uint8) # Hypothetical power consumption values
     
-    # Precompute T col diffs for correlation
-    T_col_diffs = np.empty((end_sample, ntraces))
-    for si in range(start_sample, end_sample):
-        col = T[:ntraces, si]
-        T_mean = np.mean(col)
-        T_col_diffs[si] = col-T_mean
     
     window_start = start_sample
     window_end   = end_sample
@@ -295,79 +269,18 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
             for ki in range(nkeys):
                 H[ti, ki] = hamming_weights[sbox[M[ti, b] ^ ki]]
 
-        max_correlation = 0
-        byte = 0
-        sample = 0
 
         T2 = T[:ntraces, window_start:window_end]
 
-        jorge   = np.empty((nkeys, window_end-window_start))
-        # pearson = np.empty((nkeys, window_end-window_start))
-        # mine    = np.empty((nkeys, window_end-window_start))
+        correlation_matrix  = np.abs(corr2_coeff(H.T, T2.T))
 
-        # for ki in range(nkeys):
-        #   for si in range(window_end-window_start):
-        #       pearson[ki, si] = scipy.stats.pearsonr(H[:, ki], T[:ntraces, si])[0]
-
-        ## Check each key's correlation across the sample range
-        # start = timeit.default_timer()
-        jorge = np.abs(corr2_coeff(H.T, T2.T))
-        # stop = timeit.default_timer()
-        # print("Jorje time", stop-start)
-        # start = timeit.default_timer()
-
-        # for ki in range(nkeys):
-        #     # Precompute H column for correlation
-        #     H_col = H[:, ki]
-        #     H_col_diff = H_col - np.mean(H_col)
-        #     for si in range(window_start, window_end):
-        #         ## Check correlation
-        #         correlation = np.abs(correlation_fn(H_col_diff, T_col_diffs[si]))
-        #         mine[ki, si-window_start] = correlation
-        #         if (correlation > max_correlation):
-        #             max_correlation = correlation
-        #             byte            = ki
-        #             sample          = si
-        # stop = timeit.default_timer()
-        # print("Mine time", stop-start)
+        byte   = np.nanargmax(np.nanmax(correlation_matrix, axis=1))
+        sample = np.nanargmax(correlation_matrix[byte])
 
 
-        # print("My Best Sample", sample)
-        byte = np.nanargmax(np.nanmax(jorge, axis=1))
-        print("Jorje Best Key", byte)
-
-        print("Jorje",   jorge.shape)
-        # print("Pearson", pearson.shape)
-        # print("Mine",    mine.shape)
-
-
-        # for ki in range(nkeys):
-        #   plt.plot(mine[ki, :],    'b')
-        #   # plt.plot(pearson[ki, :], 'r')
-        #   plt.plot(jorge[ki, :],   'g')
-        # plt.show()  
-
-        # for ki in range(nkeys):
-        #   for si  in range(window_end -window_start):
-        #     if((not np.isinf(R[ki, si])) and R[ki, si] > max_correlation):
-        #       s = R[ki, si]
-        #       byte = ki  
-
-        # print("Equal", np.testing.assert_array_almost_equal(R, desired))
-
-        
-
-        # window_start = sample-window_behind
-        # window_end = sample+window_ahead
         key_guess[b%(end_byte-start_byte)] = byte
-        # best_samples.append(sample)
-        # best_corrs.append(max_correlation)
-        print("BROKEN BYTE", b , "=", byte)
+        print("BROKEN BYTE", b , "=", byte, "at sample", sample)
         
-    # print("\n\nKEY GUESS", key_guess[:])    
-    # print("BEST_SAMPLES", best_samples)
-    # print("BEST_CORRS", best_corrs)
-
 
 def worker(M, T, ntraces, key_start, key_end, keys):
   crack_aes( M, T, ntraces=ntraces, start_byte=key_start, end_byte=key_end, key_guess=keys)

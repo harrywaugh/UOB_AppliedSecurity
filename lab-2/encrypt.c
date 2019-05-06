@@ -101,7 +101,7 @@ int main( int argc, char* argv[] ) {
         printf( "AES.Enc( k, m ) == c\n" );
       }
       else {
-        // printf( "AES.Enc( k, m ) != c\n" );
+        printf( "AES.Enc( k, m ) != c\n" );
       }
     }
   }

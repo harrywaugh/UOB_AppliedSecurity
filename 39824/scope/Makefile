@@ -34,9 +34,9 @@ CC_LIBS   =
 
 all: 
 	g++ ${CC_FLAGS} ${CC_PATHS} attack.cpp -o attack ${CC_LIBS}
-program-attack-file :
+attack-file :
 	@python parallel_attack.py --mode="uart" --data="04:DEADBEEF" --uart="/dev/scale-board" --file=${file}
-program-attack-board :
+attack-board :
 	@python parallel_attack.py --mode="uart" --data="04:DEADBEEF" --uart="/dev/scale-board"
 
 	
