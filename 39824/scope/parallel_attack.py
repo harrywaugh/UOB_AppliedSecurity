@@ -273,14 +273,15 @@ def crack_aes(M, T, ntraces=1000, start_byte=0, end_byte=16, key_guess=[]):
 
         correlation_matrix  = np.abs(get_correllation_matrix(H.T, T2.T))
 
-        byte   = np.nanargmax(np.nanmax(correlation_matrix, axis=1))
-        sample = window_start + np.nanargmax(correlation_matrix[byte])
+        byte         = np.nanargmax(np.nanmax(correlation_matrix, axis=1))
+        sample       = window_start + np.nanargmax(correlation_matrix[byte])
+        correllation = correlation_matrix[byte, sample-window_start]
 
         window_start = sample - window_behind
         window_end   = sample + window_ahead
 
         key_guess[b%(end_byte-start_byte)] = byte
-        print("BROKEN BYTE", b , "=", byte, "at sample", sample)
+        print("BROKEN BYTE", b , "=", byte, "at sample", sample, "correllation is", correllation)
         
 
 def worker(M, T, ntraces, key_start, key_end, keys):

@@ -21,7 +21,7 @@ typedef uint16_t aes_poly_t;
 
 
 
-void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k);
+void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k, uint8_t *r);
 void aes_enc_mix_columns(aes_gf28_t *s);
 void aes_enc_shift_rows(aes_gf28_t* s);
 void aes_enc_sub_bytes(aes_gf28_t* s);
