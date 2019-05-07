@@ -28,7 +28,7 @@ unsigned char sbox[256] =
   0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
 
-unsigned char sbox2[256]= 
+unsigned char sbox_masked[256]= 
 {
   0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
   0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -70,11 +70,11 @@ unsigned char sbox2[256]=
   s[d] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
 }
 
-#define AES_ENC_MASK_MIX_STEP(a,b,c,d) {      \
-  aes_gf28_t __a1 = m14[ a ];                  \
-  aes_gf28_t __b1 = m14[ b ];                  \
-  aes_gf28_t __c1 = m14[ c ];                  \
-  aes_gf28_t __d1 = m14[ d ];                  \
+#define AES_ENC_MASK_MIX_STEP() {      \
+  aes_gf28_t __a1 = m14[ 0 ];                  \
+  aes_gf28_t __b1 = m14[ 1 ];                  \
+  aes_gf28_t __c1 = m14[ 2 ];                  \
+  aes_gf28_t __d1 = m14[ 3 ];                  \
                                              \
   aes_gf28_t __a2 = gf28_t_mulx( __a1 );     \
   aes_gf28_t __b2 = gf28_t_mulx( __b1 );     \
@@ -86,10 +86,10 @@ unsigned char sbox2[256]=
   aes_gf28_t __c3 = __c1 ^ __c2;             \
   aes_gf28_t __d3 = __d1 ^ __d2;             \
                                              \
-  m14_prime[a] = __a2 ^ __b3 ^ __c1 ^ __d1;          \
-  m14_prime[b] = __a1 ^ __b2 ^ __c3 ^ __d1;          \
-  m14_prime[c] = __a1 ^ __b1 ^ __c2 ^ __d3;          \
-  m14_prime[d] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
+  m14_prime[0] = __a2 ^ __b3 ^ __c1 ^ __d1;          \
+  m14_prime[1] = __a1 ^ __b2 ^ __c3 ^ __d1;          \
+  m14_prime[2] = __a1 ^ __b1 ^ __c2 ^ __d3;          \
+  m14_prime[3] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
 }
 
 #define AES_ENC_SHIFT_STEP(a, b, c, d, e, f, g, h)  { \
@@ -112,10 +112,10 @@ unsigned char sbox2[256]=
 }
 
 #define AES_ENC_SUB_STEP(a, b, c, d)  { \
-  s[a] = sbox2[s[a]];                       \
-  s[b] = sbox2[s[b]];                       \
-  s[c] = sbox2[s[c]];                       \
-  s[d] = sbox2[s[d]];                       \
+  s[a] = sbox_masked[s[a]];                       \
+  s[b] = sbox_masked[s[b]];                       \
+  s[c] = sbox_masked[s[c]];                       \
+  s[d] = sbox_masked[s[d]];                       \
 }
 
 #define Nb 4
@@ -170,7 +170,7 @@ int main( int argc, char* argv[] ) {
 
 void create_updated_sbox(uint8_t m0, uint8_t m0_prime)  {
   for (int x = 0; x < 256; x++)  {
-   sbox2[x^m0] = sbox[x] ^ m0_prime;
+   sbox_masked[x^m0] = sbox[x] ^ m0_prime;
   }
 }
 
@@ -212,13 +212,12 @@ void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k, uint8_t* r)  {
   memcpy(s, m, 16);
   memcpy(rk, k, 16);
 
-
-  uint8_t m14_prime[4];
   uint8_t m14[4];
+  memcpy(m14, r+2, 4);
+  uint8_t m14_prime[4];
+  AES_ENC_MASK_MIX_STEP();
   uint8_t m0       = r[0];
   uint8_t m0_prime = r[1];
-  memcpy(m14, r+2, 4);
-  AES_ENC_MASK_MIX_STEP(0, 1, 2, 3);
 
 
   create_updated_sbox(m0, m0_prime);
@@ -287,10 +286,10 @@ void aes_enc_key_add(aes_gf28_t* s, aes_gf28_t* rk )  {
 
 //Given ith round key and constant, it calculates the (i+1)th round key 
 void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
-  rk[0]  = rc ^ sbox2[rk[13]] ^ rk[0];
-  rk[1]  =      sbox2[rk[14]] ^ rk[1];
-  rk[2]  =      sbox2[rk[15]] ^ rk[2];
-  rk[3]  =      sbox2[rk[12]] ^ rk[3];
+  rk[0]  = rc ^ sbox_masked[rk[13]] ^ rk[0];
+  rk[1]  =      sbox_masked[rk[14]] ^ rk[1];
+  rk[2]  =      sbox_masked[rk[15]] ^ rk[2];
+  rk[3]  =      sbox_masked[rk[12]] ^ rk[3];
 
   rk[4]  =      rk[0]               ^ rk[4];
   rk[5]  =      rk[1]               ^ rk[5];
