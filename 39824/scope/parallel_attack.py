@@ -116,7 +116,7 @@ def get_traces(ntraces) :
         board_wrln( fd, str2octetstr( seq2str( m ) ) )
         board_wrln( fd, '00:' )
         # Section 3.26, Page 54; Step  6: wait for acquisition to complete
-        while ( not scope.isReady() ) : time.sleep( 1 )
+        while ( not scope.isReady() ) : time.sleep( 0.1 )
 
         c = str2seq( octetstr2str( board_rdln( fd ) ) )
 
@@ -289,7 +289,7 @@ def worker(M, T, ntraces, key_start, key_end, keys):
 
 def attack(argc, argv):
   
-  ntraces = 150
+  ntraces = 100
   if(args.file == None):
     print("Getting traces from board")
     t, s, M, C, T = get_traces(ntraces=ntraces)
@@ -328,14 +328,16 @@ def attack(argc, argv):
   print("\nTime taken to crack 16 bytes: ", end - start)
   actual_key = [128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103]
   actual_key_mine  = [ 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13]
-  correct = True
-  for i in range(len(final_list)):
-    if (actual_key[i] != final_list[i]):
-       correct = False
-  if(correct):
-    print("\nCORRECT KEY")
-  else:
-    print("\nINCORRECT KEY")
+
+
+  print("My Key", actual_key_mine)
+  print("Dans Key", actual_key)
+
+  # correct = True
+  # if(correct):
+  #   print("\nCORRECT KEY")
+  # else:
+  #   print("\nINCORRECT KEY")
 
 
 if ( __name__ == '__main__' ) :

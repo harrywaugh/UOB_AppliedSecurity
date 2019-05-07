@@ -132,9 +132,9 @@ aes_gf28_t gf28_t_mul( aes_gf28_t a,  aes_gf28_t b );
 aes_gf28_t gf28_t_mulx( aes_gf28_t a );
 
 
-void print_arr(aes_gf28_t *arr)  {
+void print_arr(aes_gf28_t *arr, uint8_t m)  {
   for ( int i = 0; i < 16; i++)
-    printf("%02X ", arr[i]);
+    printf("%02X ", arr[i]^m);
   printf("\n\n");
 }
 
@@ -176,19 +176,19 @@ void create_updated_sbox(uint8_t m0, uint8_t m0_prime)  {
 
 void mask_state(aes_gf28_t *s, uint8_t *m14)  {
   for (uint8_t x = 0; x < 4; x++)  {
-    s[4*x+0] ^=  m14[x];
-    s[4*x+1] ^=  m14[x];
-    s[4*x+2] ^=  m14[x];
-    s[4*x+3] ^=  m14[x];
+    s[4*x+0] ^=  m14[0];
+    s[4*x+1] ^=  m14[1];
+    s[4*x+2] ^=  m14[2];
+    s[4*x+3] ^=  m14[3];
   }
 }
 
 void remask(aes_gf28_t *s, uint8_t *m14, uint8_t m0_prime)  {
   for (uint8_t x = 0; x < 4; x++)  {
-    s[4*x+0] ^= m14[x] ^ m0_prime;
-    s[4*x+1] ^= m14[x] ^ m0_prime;
-    s[4*x+2] ^= m14[x] ^ m0_prime;
-    s[4*x+3] ^= m14[x] ^ m0_prime;
+    s[4*x+0] ^= m14[0] ^ m0_prime;
+    s[4*x+1] ^= m14[1] ^ m0_prime;
+    s[4*x+2] ^= m14[2] ^ m0_prime;
+    s[4*x+3] ^= m14[3] ^ m0_prime;
   }
 }
 
@@ -196,10 +196,10 @@ void remask(aes_gf28_t *s, uint8_t *m14, uint8_t m0_prime)  {
 
 void mask_roundkey(aes_gf28_t *rkp, aes_gf28_t *masked_rkp, uint8_t *m14_prime, uint8_t m0)  {
   for (uint8_t x = 0; x < 4; x++)  {
-    masked_rkp[4*x+0] = rkp[4*x+0] ^ m14_prime[x] ^ m0;
-    masked_rkp[4*x+1] = rkp[4*x+1] ^ m14_prime[x] ^ m0;
-    masked_rkp[4*x+2] = rkp[4*x+2] ^ m14_prime[x] ^ m0;
-    masked_rkp[4*x+3] = rkp[4*x+3] ^ m14_prime[x] ^ m0;
+    masked_rkp[4*x+0] = rkp[4*x+0] ^ m14_prime[0] ^ m0;
+    masked_rkp[4*x+1] = rkp[4*x+1] ^ m14_prime[1] ^ m0;
+    masked_rkp[4*x+2] = rkp[4*x+2] ^ m14_prime[2] ^ m0;
+    masked_rkp[4*x+3] = rkp[4*x+3] ^ m14_prime[3] ^ m0;
   }
 }
 
@@ -212,20 +212,18 @@ void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k, uint8_t* r)  {
   memcpy(s, m, 16);
   memcpy(rk, k, 16);
 
-  uint8_t m14[4];
-  memcpy(m14, r+2, 4);
-  uint8_t m14_prime[4];
-  AES_ENC_MASK_MIX_STEP();
+
   uint8_t m0       = r[0];
   uint8_t m0_prime = r[1];
-
+  uint8_t m14[4]   = {r[2], r[3], r[4], r[5]} ;
+  uint8_t m14_prime[4]; 
+  AES_ENC_MASK_MIX_STEP();
 
   create_updated_sbox(m0, m0_prime);
 
   mask_state(s, m14_prime);
   mask_roundkey(rk, masked_rk, m14_prime, m0);
   aes_enc_key_add(s, masked_rk);
-
   for ( int round = 1; round <= 9; ++round )  {
     aes_enc_sub_bytes(s);
     aes_enc_shift_rows(s);
@@ -244,7 +242,6 @@ void aes_enc(uint8_t* c, uint8_t* m, uint8_t* k, uint8_t* r)  {
   aes_enc_exp_step(rk, *(++rcp));
   mask_roundkey(rk, masked_rk, m14_prime, m0_prime);
   aes_enc_key_add(s, masked_rk);
-
   mask_state(s, m14_prime);
 
   memcpy(c, s, 16);
@@ -272,8 +269,6 @@ void aes_enc_sub_bytes(aes_gf28_t* s)  {
   AES_ENC_SUB_STEP(4, 5, 6, 7);
   AES_ENC_SUB_STEP(8, 9, 10, 11);
   AES_ENC_SUB_STEP(12, 13, 14, 15);
-  // for ( uint8_t i = 0; i < 16; ++i)
-  //   s[i] = gf28_t_sbox(s[i]);
 }
 
 //Takes state matrix and a round key, and performs element-wise XOR
@@ -286,10 +281,10 @@ void aes_enc_key_add(aes_gf28_t* s, aes_gf28_t* rk )  {
 
 //Given ith round key and constant, it calculates the (i+1)th round key 
 void aes_enc_exp_step(aes_gf28_t* rk, uint8_t rc)  {
-  rk[0]  = rc ^ sbox_masked[rk[13]] ^ rk[0];
-  rk[1]  =      sbox_masked[rk[14]] ^ rk[1];
-  rk[2]  =      sbox_masked[rk[15]] ^ rk[2];
-  rk[3]  =      sbox_masked[rk[12]] ^ rk[3];
+  rk[0]  = rc ^ sbox[rk[13]] ^ rk[0];
+  rk[1]  =      sbox[rk[14]] ^ rk[1];
+  rk[2]  =      sbox[rk[15]] ^ rk[2];
+  rk[3]  =      sbox[rk[12]] ^ rk[3];
 
   rk[4]  =      rk[0]               ^ rk[4];
   rk[5]  =      rk[1]               ^ rk[5];
