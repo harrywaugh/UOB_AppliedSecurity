@@ -101,6 +101,12 @@ def get_traces(ntraces) :
     # # Section 3.  56, Page 93; Step  4: configure trigger
     scope.setSimpleTrigger( 'A', threshold_V = 2.0E-0, direction = 'Rising', timeout_ms = 0 )
 
+    board_wrln( fd, '01:00' )
+    board_rdln( fd ) 
+    board_rdln( fd ) 
+    rnd_size = str2seq( octetstr2str( board_rdln( fd ) ) )[0]
+
+
     for i in range(t):
 
         print("Getting Trace", i)
@@ -108,13 +114,15 @@ def get_traces(ntraces) :
 
 
         m = np.random.randint(256, size=16)
+        r = np.random.randint(256, size=rnd_size)
+
 
         # Section 3.37, Page 65; Step  5: start acquisition
         scope.runBlock()
 
         board_wrln( fd, '01:01' )
         board_wrln( fd, str2octetstr( seq2str( m ) ) )
-        board_wrln( fd, '00:' )
+        board_wrln( fd, str2octetstr( seq2str( r ) ) )
         # Section 3.26, Page 54; Step  6: wait for acquisition to complete
         while ( not scope.isReady() ) : time.sleep( 0.1 )
 
@@ -123,8 +131,6 @@ def get_traces(ntraces) :
         M[i] = m
         C[i] = c
 
-        # print("Message", m)
-        # print("Ciphertext", c)
 
 
         # Section 3.40, Page 71; Step  7: configure buffers
@@ -137,9 +143,7 @@ def get_traces(ntraces) :
 
         T[i] = B[:s]
 
-        # fig, ax = plt.subplots()
-        # ax.plot(T[i])
-        # plt.show()
+ 
     scope.close() 
 
     board_close( fd )
@@ -289,7 +293,7 @@ def worker(M, T, ntraces, key_start, key_end, keys):
 
 def attack(argc, argv):
   
-  ntraces = 100
+  ntraces = 200
   if(args.file == None):
     print("Getting traces from board")
     t, s, M, C, T = get_traces(ntraces=ntraces)
@@ -322,22 +326,17 @@ def attack(argc, argv):
 
   # final_list = keys0[:] + keys1[:] + keys2[:] + keys3[:]
   final_list = keys0[:] + keys3[:]
-  print("FINAL KEY GUESS", final_list)
-  print("FINAL KEY GUESS", [hex(x) for x in final_list])
+  print("Final key guess (int)", final_list)
+  print("Final key guess (hex)", [hex(x) for x in final_list])
   end = timeit.default_timer()
-  print("\nTime taken to crack 16 bytes: ", end - start)
-  actual_key = [128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103]
-  actual_key_mine  = [ 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13]
+  print("Time taken to crack 16 bytes: ", end - start)
+  # actual_key = [128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103]
+  # actual_key_mine  = [ 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13]
 
 
-  print("My Key", actual_key_mine)
-  print("Dans Key", actual_key)
-
-  # correct = True
-  # if(correct):
-  #   print("\nCORRECT KEY")
-  # else:
-  #   print("\nINCORRECT KEY")
+  # print("My Key", actual_key_mine)
+  # print("Dans Key", actual_key)
+  print("Traces used: ", ntraces)
 
 
 if ( __name__ == '__main__' ) :
