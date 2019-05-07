@@ -31,6 +31,27 @@ unsigned char sbox[256] =
   0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 };
 
+unsigned char sbox_masked[256]= 
+{
+  0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+  0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
+  0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
+  0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
+  0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0, 0x52, 0x3B, 0xD6, 0xB3, 0x29, 0xE3, 0x2F, 0x84,
+  0x53, 0xD1, 0x00, 0xED, 0x20, 0xFC, 0xB1, 0x5B, 0x6A, 0xCB, 0xBE, 0x39, 0x4A, 0x4C, 0x58, 0xCF,
+  0xD0, 0xEF, 0xAA, 0xFB, 0x43, 0x4D, 0x33, 0x85, 0x45, 0xF9, 0x02, 0x7F, 0x50, 0x3C, 0x9F, 0xA8,
+  0x51, 0xA3, 0x40, 0x8F, 0x92, 0x9D, 0x38, 0xF5, 0xBC, 0xB6, 0xDA, 0x21, 0x10, 0xFF, 0xF3, 0xD2,
+  0xCD, 0x0C, 0x13, 0xEC, 0x5F, 0x97, 0x44, 0x17, 0xC4, 0xA7, 0x7E, 0x3D, 0x64, 0x5D, 0x19, 0x73,
+  0x60, 0x81, 0x4F, 0xDC, 0x22, 0x2A, 0x90, 0x88, 0x46, 0xEE, 0xB8, 0x14, 0xDE, 0x5E, 0x0B, 0xDB,
+  0xE0, 0x32, 0x3A, 0x0A, 0x49, 0x06, 0x24, 0x5C, 0xC2, 0xD3, 0xAC, 0x62, 0x91, 0x95, 0xE4, 0x79,
+  0xE7, 0xC8, 0x37, 0x6D, 0x8D, 0xD5, 0x4E, 0xA9, 0x6C, 0x56, 0xF4, 0xEA, 0x65, 0x7A, 0xAE, 0x08,
+  0xBA, 0x78, 0x25, 0x2E, 0x1C, 0xA6, 0xB4, 0xC6, 0xE8, 0xDD, 0x74, 0x1F, 0x4B, 0xBD, 0x8B, 0x8A,
+  0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E, 0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
+  0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
+  0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
+};
+
+
 void aes_enc(uint8_t *c, uint8_t *m, uint8_t *k);
 void aes_enc_mix_columns(aes_gf28_t *s);
 void aes_enc_shift_rows(aes_gf28_t* s);
@@ -74,6 +95,28 @@ void my_print(char *string);
   s[d] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
 }
 
+#define AES_ENC_MASK_MIX_STEP() {      \
+  aes_gf28_t __a1 = m14[ 0 ];                  \
+  aes_gf28_t __b1 = m14[ 1 ];                  \
+  aes_gf28_t __c1 = m14[ 2 ];                  \
+  aes_gf28_t __d1 = m14[ 3 ];                  \
+                                             \
+  aes_gf28_t __a2 = gf28_t_mulx( __a1 );     \
+  aes_gf28_t __b2 = gf28_t_mulx( __b1 );     \
+  aes_gf28_t __c2 = gf28_t_mulx( __c1 );     \
+  aes_gf28_t __d2 = gf28_t_mulx( __d1 );     \
+                                             \
+  aes_gf28_t __a3 = __a1 ^ __a2;             \
+  aes_gf28_t __b3 = __b1 ^ __b2;             \
+  aes_gf28_t __c3 = __c1 ^ __c2;             \
+  aes_gf28_t __d3 = __d1 ^ __d2;             \
+                                             \
+  m14_prime[0] = __a2 ^ __b3 ^ __c1 ^ __d1;          \
+  m14_prime[1] = __a1 ^ __b2 ^ __c3 ^ __d1;          \
+  m14_prime[2] = __a1 ^ __b1 ^ __c2 ^ __d3;          \
+  m14_prime[3] = __a3 ^ __b1 ^ __c1 ^ __d2;          \
+}
+
 #define AES_ENC_SHIFT_STEP(a, b, c, d, e, f, g, h)  { \
   aes_gf28_t __a1 = s[ a ];                  \
   aes_gf28_t __b1 = s[ b ];                  \
@@ -94,98 +137,97 @@ void my_print(char *string);
 }
 
 #define AES_ENC_SUB_STEP(a, b, c, d)  { \
-  s[a] = sbox[s[a]];                       \
-  s[b] = sbox[s[b]];                       \
-  s[c] = sbox[s[c]];                       \
-  s[d] = sbox[s[d]];                       \
+  s[a] = sbox_masked[s[a]];                       \
+  s[b] = sbox_masked[s[b]];                       \
+  s[c] = sbox_masked[s[c]];                       \
+  s[d] = sbox_masked[s[d]];                       \
 }
 
 
 
-/** Initialise an AES-128 encryption, e.g., expand the cipher key k into round
-  * keys, or perform randomised pre-computation in support of a countermeasure;
-  * this can be left blank if no such initialisation is required, because the
-  * same k and r will be passed as input to the encryption itself.
-  * 
-  * \param[in]  k   an   AES-128 cipher key
-  * \param[in]  r   some         randomness
-  */
+void create_updated_sbox(uint8_t m0, uint8_t m0_prime)  {
+  for (int x = 0; x < 256; x++)  {
+   sbox_masked[x^m0] = sbox[x] ^ m0_prime;
+  }
+}
+
+void mask_state(aes_gf28_t *s, uint8_t *m14)  {
+  for (uint8_t x = 0; x < 4; x++)  {
+    s[4*x+0] ^=  m14[0];
+    s[4*x+1] ^=  m14[1];
+    s[4*x+2] ^=  m14[2];
+    s[4*x+3] ^=  m14[3];
+  }
+}
+
+void remask(aes_gf28_t *s, uint8_t *m14, uint8_t m0_prime)  {
+  for (uint8_t x = 0; x < 4; x++)  {
+    s[4*x+0] ^= m14[0] ^ m0_prime;
+    s[4*x+1] ^= m14[1] ^ m0_prime;
+    s[4*x+2] ^= m14[2] ^ m0_prime;
+    s[4*x+3] ^= m14[3] ^ m0_prime;
+  }
+}
+
+
+
+void mask_roundkey(aes_gf28_t *rkp, aes_gf28_t *masked_rkp, uint8_t *m14_prime, uint8_t m0)  {
+  for (uint8_t x = 0; x < 4; x++)  {
+    masked_rkp[4*x+0] = rkp[4*x+0] ^ m14_prime[0] ^ m0;
+    masked_rkp[4*x+1] = rkp[4*x+1] ^ m14_prime[1] ^ m0;
+    masked_rkp[4*x+2] = rkp[4*x+2] ^ m14_prime[2] ^ m0;
+    masked_rkp[4*x+3] = rkp[4*x+3] ^ m14_prime[3] ^ m0;
+  }
+}
 
 void aes_init(                               const uint8_t* k, const uint8_t* r ) {
   return;
 }
 
-/** Perform    an AES-128 encryption of a plaintext m under a cipher key k, to
-  * yield the corresponding ciphertext c.
-  * 
-  * \param[out] c   an   AES-128 ciphertext
-  * \param[in]  m   an   AES-128 plaintext
-  * \param[in]  k   an   AES-128 cipher key
-  * \param[in]  r   some         randomness
-  */
 
 void aes     ( uint8_t* c, const uint8_t* m, const uint8_t* k, const uint8_t* r ) {
   aes_gf28_t AEC_RC[] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
-  aes_gf28_t rk[ 16 ], s[ 16 ];  // Declare 'current' round key and state matrices
+  aes_gf28_t rk[ 16 ], masked_rk[ 16 ], s[ 16 ];  // Declare current' round key and state matrices
+  aes_gf28_t *rcp = AEC_RC;
   
-  aes_gf28_t *rcp = AEC_RC;              // Declare pointer to the round constant
-  aes_gf28_t* rkp = rk;                  // Declare pointer to rk current round key matrix
-
-
   memcpy(s, m, 16);
-  memcpy(rkp, k, 16);
+  memcpy(rk, k, 16);
 
 
-  aes_enc_key_add(s, rkp);
+  uint8_t m0       = r[0];
+  uint8_t m0_prime = r[1];
+  uint8_t m14[4]   = {r[2], r[3], r[4], r[5]} ;
+  uint8_t m14_prime[4]; 
+  AES_ENC_MASK_MIX_STEP();
 
+  create_updated_sbox(m0, m0_prime);
 
-  for ( int r = 1; r < 10; ++r )  {
+  mask_state(s, m14_prime);
+  mask_roundkey(rk, masked_rk, m14_prime, m0);
+  aes_enc_key_add(s, masked_rk);
+  for ( int round = 1; round <= 9; ++round )  {
     aes_enc_sub_bytes(s);
     aes_enc_shift_rows(s);
+    remask(s, m14, m0_prime);
     aes_enc_mix_columns(s);
 
-    aes_enc_exp_step(rkp, *(++rcp));
-    aes_enc_key_add(s, rkp);
+    aes_enc_exp_step(rk, *(++rcp));
+    mask_roundkey(rk, masked_rk, m14_prime, m0);
+    aes_enc_key_add(s, masked_rk);
   }
 
   aes_enc_sub_bytes(s);
   aes_enc_shift_rows(s);
 
-  aes_enc_exp_step(rkp, *(++rcp));
-  aes_enc_key_add(s, rkp);
-  
+
+  aes_enc_exp_step(rk, *(++rcp));
+  mask_roundkey(rk, masked_rk, m14_prime, m0_prime);
+  aes_enc_key_add(s, masked_rk);
+  mask_state(s, m14_prime);
+
   memcpy(c, s, 16);
 }
 
-/** Initialise the SCALE development board, then loop indefinitely, reading a
-  * command then processing it:
-  *
-  * 1. If command is inspect, then
-  *
-  *    - write the SIZEOF_BLK parameter,
-  *      i.e., number of bytes in an  AES-128 plaintext  m, or ciphertext c,
-  *      to the UART, 
-  *    - write the SIZEOF_KEY parameter,
-  *      i.e., number of bytes in an  AES-128 cipher key k,
-  *      to the UART, 
-  *    - write the SIZEOF_RND parameter,
-  *      i.e., number of bytes in the         randomness r.
-  *      to the UART.
-  *
-  * 2. If command is encrypt, then
-  *
-  *    - read  an   AES-128 plaintext  m from the UART,
-  *    - read  some         randomness r from the UART,
-  *    - initalise the encryption,
-  *    - set the trigger signal to 1,
-  *    - execute   the encryption, producing the ciphertext 
-  *
-  *      c = AES-128.Enc( m, k )
-  *
-  *      using the hard-coded cipher key k plus randomness r if/when need be,
-  *    - set the trigger signal to 0,
-  *    - write an   AES-128 ciphertext c to   the UART.
-  */
 
 int main( int argc, char* argv[] ) {
   if( !scale_init( &SCALE_CONF ) ) {
@@ -193,7 +235,9 @@ int main( int argc, char* argv[] ) {
   }
 
   uint8_t cmd[ 1 ], c[ SIZEOF_BLK ], m[ SIZEOF_BLK ], r[ SIZEOF_RND ];
-  uint8_t k[ SIZEOF_KEY ] = { 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13};
+  // uint8_t k[ SIZEOF_KEY ] = { 0xCD, 0X97, 0X16, 0XE9, 0X5B, 0X42, 0XDD, 0X48, 0X69, 0X77, 0X2A, 0X34, 0X6A, 0X7F, 0X58, 0X13};
+  uint8_t k[ 16 ] = {128, 206, 252, 108, 120, 51, 218, 176, 138, 49, 165, 105, 4, 112, 119, 103};
+
 
   while( true ) {
     // my_print("Inspect (01:00) or ENCRYPT (01:01): ");
